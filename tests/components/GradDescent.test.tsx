@@ -15,11 +15,32 @@ function renderGD() {
 }
 
 describe('GradDescent route', () => {
+  it('shows the v1 heading "勾配降下"', () => {
+    renderGD();
+    expect(
+      screen.getByRole('heading', { level: 2, name: '勾配降下' }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows the v1 description featuring (x-2)^2 + 1', () => {
+    const { container } = renderGD();
+    expect(container.textContent).toContain('(x-2)^2 + 1');
+  });
+
+  it('exposes "1 ステップ", "10 ステップ", "リセット" buttons (v1 set)', () => {
+    renderGD();
+    expect(screen.getByRole('button', { name: '1 ステップ' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '10 ステップ' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'リセット' })).toBeInTheDocument();
+  });
+
   it('shows divergence warning when eta is large and steps run', () => {
     renderGD();
-    const etaSlider = screen.getByLabelText(/η =/) as HTMLInputElement;
+    // Two sliders exist; the second is the learning-rate η slider (matches v1 layout).
+    const sliders = screen.getAllByRole('slider') as HTMLInputElement[];
+    const etaSlider = sliders[1];
     fireEvent.change(etaSlider, { target: { value: '1.2' } });
-    const stepBtn = screen.getByRole('button', { name: /次のステップ/ });
+    const stepBtn = screen.getByRole('button', { name: '1 ステップ' });
     // With eta=1.2, x0=5, |x-2| grows 1.4×/step; reaching |x|>1e6 needs ~38 steps.
     // Use fireEvent.click (synchronous) so 40 iterations stay fast.
     for (let i = 0; i < 40; i++) fireEvent.click(stepBtn);

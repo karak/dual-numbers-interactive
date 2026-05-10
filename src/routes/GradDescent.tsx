@@ -1,63 +1,140 @@
 import { useState } from 'react';
-import { StepRow } from '../components/StepRow';
+import { MathJax } from 'better-react-mathjax';
+import { Plot } from '../components/Plot';
 import { Slider } from '../components/Slider';
+import { StepRow } from '../components/StepRow';
 import { Warn } from '../components/Warn';
-import { fmt3 } from '../lib/format';
-import { gradStep, isDiverged, type GradStepResult } from '../lib/grad';
+import { drawAxes, drawCurve, drawPoint, makePlotMap } from '../lib/plot';
+import { gradStep } from '../lib/grad';
+
+// v1 source: examples.gradDescent in docs/legacy/index.html
+//   - heading: '勾配降下'
+//   - description: f(x) = (x-2)^2 + 1 の最小点を ...
+//   - slider 初期値 x_0: -5..9 step 0.01 (initial 5.0)
+//   - slider 学習率 η: 0.01..1.2 step 0.01 (initial 0.1)
+//   - buttons '1 ステップ' / '10 ステップ' / 'リセット'
+//   - history starts with {x: x0, fx: f(x0)}
+//   - last 8 rows shown, format '\text{step } i:\; x = ...,\; f(x) = ...'
+//   - warning '⚠ 発散しました。学習率 η を小さくしてください。'
+const fnGD = (x: number): number => (x - 2) * (x - 2) + 1;
+
+interface HistRow {
+  x: number;
+  fx: number;
+}
+
+const initialHistory = (x0: number): HistRow[] => [{ x: x0, fx: fnGD(x0) }];
 
 export function GradDescent() {
   const [x0, setX0] = useState(5);
   const [eta, setEta] = useState(0.1);
-  const [history, setHistory] = useState<GradStepResult[]>([]);
+  const [history, setHistory] = useState<HistRow[]>(() => initialHistory(5));
 
-  const advance = () => {
+  const doStep = () => {
     setHistory((h) => {
-      const prev = h.length === 0 ? x0 : h[h.length - 1].x;
-      return [...h, gradStep(prev, eta)];
+      const last = h[h.length - 1];
+      const r = gradStep(last.x, eta);
+      return [...h, { x: r.x, fx: fnGD(r.x) }];
     });
   };
-  const reset = () => setHistory([]);
+  const doTen = () => {
+    setHistory((h) => {
+      const out: HistRow[] = [...h];
+      for (let i = 0; i < 10; i++) {
+        const last = out[out.length - 1];
+        const r = gradStep(last.x, eta);
+        out.push({ x: r.x, fx: fnGD(r.x) });
+      }
+      return out;
+    });
+  };
+  const reset = () => setHistory(initialHistory(x0));
 
   const last = history[history.length - 1];
-  const diverged = last ? isDiverged(last) : false;
+  const diverged = !Number.isFinite(last.fx) || Math.abs(last.x) > 1e6;
+
+  // v1 only displays the last 8 rows (preserving the global step index).
+  const recent = history.slice(-8);
+  const offset = history.length - recent.length;
+
+  const draw = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    const m = makePlotMap({ xMin: -5, xMax: 9, yMin: 0, yMax: 50, w, h });
+    drawAxes(ctx, m);
+    drawCurve(ctx, m, fnGD, { color: '#1a1a1a' });
+    ctx.save();
+    ctx.strokeStyle = '#6b4eff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    history.forEach((p, i) => {
+      const px = m.toX(p.x);
+      const py = m.toY(p.fx);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    });
+    ctx.stroke();
+    ctx.restore();
+    history.forEach((p) => drawPoint(ctx, m, p.x, p.fx));
+  };
 
   return (
     <article>
       <h2 className="font-[var(--font-ui)] mt-0">勾配降下</h2>
-      <p>f(x) = (x − 2)² + 1 を勾配降下で最小化。η が大きすぎると発散します。</p>
-      <Slider
-        label="x₀"
-        value={x0}
-        min={-5}
-        max={10}
-        step={0.1}
-        onChange={(v) => { setX0(v); setHistory([]); }}
-      />
-      <Slider
-        label="η"
-        value={eta}
-        min={0}
-        max={1.5}
-        step={0.01}
-        onChange={(v) => { setEta(v); setHistory([]); }}
-      />
-      <div className="flex gap-2 mt-3">
-        <button onClick={advance} className="border border-[var(--color-border)] rounded px-3 py-1">
-          次のステップ
-        </button>
-        <button onClick={reset} className="border border-[var(--color-border)] rounded px-3 py-1">
-          リセット
-        </button>
-      </div>
-      {diverged && <Warn>発散しました。η を小さくしてください。</Warn>}
-      <div className="mt-4 space-y-1">
-        {history.map((s, i) => (
-          <div key={i}>
-            <StepRow
-              tex={`x_{${i}} = ${fmt3(s.prev)},\\; f = ${fmt3(s.fx)},\\; f' = ${fmt3(s.dfx)},\\; x_{${i + 1}} = ${fmt3(s.x)}`}
-            />
+      <p>
+        <MathJax inline>{`\\(f(x) = (x-2)^2 + 1\\)`}</MathJax> の最小点を{' '}
+        <MathJax inline>{`\\(x_{n+1} = x_n - \\eta f'(x_n)\\)`}</MathJax> で探します。
+        <MathJax inline>{`\\(f'\\)`}</MathJax> は二重数で自動計算。
+      </p>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_600px] gap-4">
+        <div>
+          <Slider
+            label={<>初期値 <MathJax inline>{`\\(x_0\\)`}</MathJax></>}
+            value={x0}
+            min={-5}
+            max={9}
+            step={0.01}
+            onChange={(v) => {
+              setX0(v);
+              setHistory(initialHistory(v));
+            }}
+          />
+          <Slider
+            label={<>学習率 <MathJax inline>{`\\(\\eta\\)`}</MathJax></>}
+            value={eta}
+            min={0.01}
+            max={1.2}
+            step={0.01}
+            onChange={(v) => setEta(v)}
+          />
+          <div className="flex gap-2 mt-3">
+            <button onClick={doStep} className="border border-[var(--color-border)] rounded px-3 py-1">
+              1 ステップ
+            </button>
+            <button onClick={doTen} className="border border-[var(--color-border)] rounded px-3 py-1">
+              10 ステップ
+            </button>
+            <button onClick={reset} className="border border-[var(--color-border)] rounded px-3 py-1">
+              リセット
+            </button>
           </div>
-        ))}
+          {diverged && (
+            <Warn>
+              ⚠ 発散しました。学習率 <MathJax inline>{`\\(\\eta\\)`}</MathJax>{' '}
+              を小さくしてください。
+            </Warn>
+          )}
+          <div className="mt-4 space-y-1">
+            {recent.map((r, i) => {
+              const idx = offset + i;
+              const tex = `\\text{step } ${idx}:\\; x = ${r.x.toFixed(4)},\\; f(x) = ${r.fx.toFixed(4)}`;
+              return (
+                <div key={idx}>
+                  <StepRow tex={tex} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <Plot draw={draw} ariaLabel="勾配降下の軌跡" />
       </div>
     </article>
   );
