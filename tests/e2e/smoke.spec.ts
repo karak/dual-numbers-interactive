@@ -61,9 +61,19 @@ test('divergence warning shows after many steps with η=1.2', async ({ page }) =
   const etaSlider = page.locator('main input[type=range]').nth(1);
   await etaSlider.fill('1.2');
   const stepBtn = page.getByRole('button', { name: '1 ステップ' });
-  for (let i = 0; i < 45; i++) await stepBtn.click();
+  // After divergence the step button becomes disabled (Refactor 4); Playwright
+  // auto-waits for clickable, so naively clicking 45× would hang. Stop as soon
+  // as the button is disabled (or after the empirical 45-iter ceiling).
+  for (let i = 0; i < 45; i++) {
+    if (await stepBtn.isDisabled()) break;
+    await stepBtn.click();
+  }
   // v1 verbatim: '⚠ 発散しました。学習率 η を小さくしてください。'
   const alert = page.getByRole('alert');
   await expect(alert).toContainText('発散しました。学習率');
   await expect(alert).toContainText('小さくしてください');
+  // Step buttons disabled after divergence (Refactor 4); reset stays enabled.
+  await expect(stepBtn).toBeDisabled();
+  await expect(page.getByRole('button', { name: '10 ステップ' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'リセット' })).toBeEnabled();
 });
