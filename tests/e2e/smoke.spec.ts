@@ -57,5 +57,8 @@ test('divergence warning shows after many steps with η=1.2', async ({ page }) =
   await etaSlider.fill('1.2');
   const stepBtn = page.getByRole('button', { name: '1 ステップ' });
   for (let i = 0; i < 45; i++) await stepBtn.click();
-  await expect(page.getByRole('alert')).toContainText('発散');
+  // v1 verbatim: '⚠ 発散しました。学習率 η を小さくしてください。'
+  const alert = page.getByRole('alert');
+  await expect(alert).toContainText('発散しました。学習率');
+  await expect(alert).toContainText('小さくしてください');
 });

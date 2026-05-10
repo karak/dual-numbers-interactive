@@ -44,6 +44,16 @@ describe('GradDescent route', () => {
     // With eta=1.2, x0=5, |x-2| grows 1.4×/step; reaching |x|>1e6 needs ~38 steps.
     // Use fireEvent.click (synchronous) so 40 iterations stay fast.
     for (let i = 0; i < 40; i++) fireEvent.click(stepBtn);
-    expect(screen.getByRole('alert')).toHaveTextContent(/発散/);
+    // v1 verbatim: '⚠ 発散しました。学習率 η を小さくしてください。'
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('発散しました。学習率');
+    expect(alert).toHaveTextContent('小さくしてください');
+    expect(alert).toHaveTextContent('⚠');
+    expect(alert).toHaveTextContent('η');
+  });
+
+  it('shows the v1 description fragment "の最小点を"', () => {
+    const { container } = renderGD();
+    expect(container.textContent).toContain('の最小点を');
   });
 });
