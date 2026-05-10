@@ -177,15 +177,74 @@
       if (MathJax.typesetClear) MathJax.typesetClear([container]);
       MathJax.typesetPromise([container]);
     }
-    // === Examples === (Tasks 5, 7-11)
+    // === Examples ===
+    const examples = {};
+
+    examples.intro = {
+      title: '導入：二重数とは',
+      hash: '#/intro',
+      initialState() { return {}; },
+      render(container) {
+        container.replaceChildren(
+          h('h2', {}, '二重数とは何か'),
+          h('p', {}, '二重数は実数の組 ', h('strong', {}, '$a + b\\varepsilon$'),
+            ' で、記号 $\\varepsilon$ は ', h('strong', {}, '$\\varepsilon^2 = 0$'),
+            ' を満たします（しかし $\\varepsilon \\ne 0$）。複素数の $i^2 = -1$ と並列で考えてみましょう。'),
+
+          h('h3', {}, 'なぜ自動微分になるのか'),
+          h('p', {}, '関数 $f$ を $x + \\varepsilon$ で評価し Taylor 展開すると：'),
+          h('p', {}, '$f(x + \\varepsilon) = f(x) + f\'(x)\\varepsilon + \\tfrac{1}{2}f\'\'(x)\\varepsilon^2 + \\cdots = f(x) + f\'(x)\\varepsilon$'),
+          h('p', {}, '$\\varepsilon^2 = 0$ により高次項がすべて消え、',
+            h('strong', {}, '実部に $f(x)$、$\\varepsilon$ 部に $f\'(x)$ が自動的に出る'), 'のです。'),
+
+          h('h3', {}, '数式とコードの対応（一例）'),
+          h('p', {}, '乗算規則 $(a + b\\varepsilon)(c + d\\varepsilon) = ac + (ad + bc)\\varepsilon$ は、そのまま JavaScript で：'),
+          h('pre', { class: 'code' },
+            'mul(b) {\n' +
+            '  return new Dual(\n' +
+            '    this.re * b.re,                       // 実部 = ac\n' +
+            '    this.re * b.du + this.du * b.re       // ε部 = ad + bc\n' +
+            '  );\n' +
+            '}'),
+          h('p', {}, '左メニューから例題を選んで、二重数が「微分計算機」として動く様子を見てください。'),
+        );
+        typeset(container);
+      },
+    };
     // === Router ===
+    const routes = [
+      { hash: '#/intro', label: '導入',     get: () => examples.intro },
+      { hash: '#/poly',  label: '多項式',   get: () => examples.poly },
+      { hash: '#/trig',  label: '三角関数', get: () => examples.trig },
+      { hash: '#/chain', label: '連鎖律',   get: () => examples.chain },
+      { hash: '#/newton',label: 'Newton 法',get: () => examples.newton },
+      { hash: '#/grad-descent', label: '勾配降下', get: () => examples.gradDescent },
+    ];
+    function buildSidebar() {
+      const aside = document.getElementById('sidebar');
+      aside.replaceChildren(...routes.map(r =>
+        h('a', { href: r.hash, 'data-hash': r.hash }, r.label)));
+    }
+    function highlightSidebar(hash) {
+      document.querySelectorAll('#sidebar a').forEach(a => {
+        const active = a.dataset.hash === hash;
+        a.classList.toggle('active', active);
+        if (active) a.setAttribute('aria-current', 'page');
+        else a.removeAttribute('aria-current');
+      });
+    }
     function router() {
       const main = document.getElementById('main');
       if (location.hash === '#test') { runSelfTest(main); return; }
-      main.replaceChildren(document.createTextNode('(router not yet implemented)'));
+      if (!location.hash) { location.hash = '#/intro'; return; }
+      highlightSidebar(location.hash);
+      const route = routes.find(r => r.hash === location.hash);
+      const ex = route && route.get();
+      if (!ex) { main.replaceChildren(document.createTextNode('(未実装: ' + location.hash + ')')); return; }
+      ex.render(main, ex.initialState());
     }
     window.addEventListener('hashchange', router);
-    window.addEventListener('DOMContentLoaded', router);
+    window.addEventListener('DOMContentLoaded', () => { buildSidebar(); router(); });
   </script>
 </body>
 </html>
