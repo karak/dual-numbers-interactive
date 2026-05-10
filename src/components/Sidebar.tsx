@@ -3,9 +3,8 @@ import { ROUTES } from '../lib/constants';
 
 export function Sidebar() {
   return (
-    <aside
+    <nav
       className="font-[var(--font-ui)] text-sm"
-      role="navigation"
       aria-label="例題メニュー"
     >
       {ROUTES.map((r) => (
@@ -24,6 +23,6 @@ export function Sidebar() {
           {r.label}
         </NavLink>
       ))}
-    </aside>
+    </nav>
   );
 }
