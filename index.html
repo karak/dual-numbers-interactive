@@ -204,6 +204,17 @@
       if (MathJax.typesetClear) MathJax.typesetClear([container]);
       MathJax.typesetPromise([container]).catch(err => console.error('[MathJax]', err));
     }
+    const COLORS = (() => {
+      const fallback = { curve: '#1a1a1a', tangent: '#6b4eff', border: '#e8e6e0' };
+      if (typeof getComputedStyle === 'undefined' || !document.documentElement) return fallback;
+      const cs = getComputedStyle(document.documentElement);
+      const get = (name, fb) => (cs.getPropertyValue(name).trim() || fb);
+      return {
+        curve:   get('--curve',   fallback.curve),
+        tangent: get('--tangent', fallback.tangent),
+        border:  get('--border',  fallback.border),
+      };
+    })();
     function makePlotMap({ xMin, xMax, yMin, yMax, w, h }) {
       return {
         toX: x => ((x - xMin) / (xMax - xMin)) * w,
@@ -221,7 +232,7 @@
     }
     function drawAxes(ctx, m) {
       ctx.save();
-      ctx.strokeStyle = '#e8e6e0';
+      ctx.strokeStyle = COLORS.border;
       ctx.lineWidth = 1;
       if (m.yMin <= 0 && m.yMax >= 0) {
         ctx.beginPath(); ctx.moveTo(0, m.toY(0)); ctx.lineTo(m.w, m.toY(0)); ctx.stroke();
@@ -233,7 +244,7 @@
     }
     function drawCurve(ctx, m, fn, opts = {}) {
       ctx.save();
-      ctx.strokeStyle = opts.color || '#1a1a1a';
+      ctx.strokeStyle = opts.color || COLORS.curve;
       ctx.lineWidth = opts.width || 2;
       ctx.beginPath();
       let started = false;
@@ -249,12 +260,12 @@
       ctx.stroke();
       ctx.restore();
     }
-    function drawPoint(ctx, m, x, y, color = '#6b4eff') {
+    function drawPoint(ctx, m, x, y, color = COLORS.tangent) {
       ctx.save(); ctx.fillStyle = color;
       ctx.beginPath(); ctx.arc(m.toX(x), m.toY(y), 4, 0, 2 * Math.PI); ctx.fill();
       ctx.restore();
     }
-    function drawTangent(ctx, m, x0, y0, slope, color = '#6b4eff') {
+    function drawTangent(ctx, m, x0, y0, slope, color = COLORS.tangent) {
       ctx.save();
       ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]);
       ctx.beginPath();
@@ -444,7 +455,7 @@
           ctx.clearRect(0, 0, m.w, m.h);
           drawAxes(ctx, m);
           drawCurve(ctx, m, fnDef.f);
-          drawCurve(ctx, m, examples.trig.taylorSum(fnDef, state.x, state.terms), { color: '#6b4eff', width: 1.5 });
+          drawCurve(ctx, m, examples.trig.taylorSum(fnDef, state.x, state.terms), { color: COLORS.tangent, width: 1.5 });
           drawPoint(ctx, m, state.x, fnDef.f(state.x));
         };
         select.addEventListener('change', e => { state.fn = e.target.value; state.terms = 1; update(); });
