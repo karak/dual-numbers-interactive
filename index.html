@@ -199,6 +199,15 @@
       for (let i = 0; i < 10; i++) x = examples.newton.step(x).x;
       return Math.abs(x*x*x - 2*x - 5) < 1e-9;
     });
+    test('grad step from x=5, eta=0.1: f\'=6, x\'=4.4', () => {
+      const r = examples.gradDescent.step(5, 0.1);
+      return eq(r.dfx, 6) && eq(r.x, 4.4);
+    });
+    test('grad converges to x=2 in 100 steps with eta=0.1', () => {
+      let x = 5;
+      for (let i = 0; i < 100; i++) x = examples.gradDescent.step(x, 0.1).x;
+      return Math.abs(x - 2) < 1e-3;
+    });
     // === UI helpers ===
     function h(tag, attrs = {}, ...children) {
       const el = document.createElement(tag);
@@ -644,6 +653,93 @@
           state.history = [{ x: state.x0, fx: examples.newton.fn(state.x0), dfx: NaN }];
           drawAll(); renderHistory();
         });
+        drawAll(); renderHistory();
+      },
+    };
+    examples.gradDescent = {
+      title: '勾配降下',
+      hash: '#/grad-descent',
+      initialState() { return { x0: 5.0, eta: 0.1, history: [] }; },
+      fn(x) { return (x - 2) * (x - 2) + 1; },
+      step(x, eta) {
+        const d = Dual.v(x);
+        const r = d.sub(Dual.c(2)).pow(2).add(Dual.c(1));
+        return { x: x - eta * r.du, fx: r.re, dfx: r.du };
+      },
+      render(container, state) {
+        if (state.history.length === 0)
+          state.history = [{ x: state.x0, fx: examples.gradDescent.fn(state.x0) }];
+        const x0 = makeSlider({ min: -5, max: 9, step: 0.01, value: state.x0, label: '初期値 $x_0$' });
+        const eta = makeSlider({ min: 0.01, max: 1.2, step: 0.01, value: state.eta, label: '学習率 $\\eta$' });
+        const stepBtn = h('button', {}, '1 ステップ');
+        const tenBtn = h('button', {}, '10 ステップ');
+        const resetBtn = h('button', {}, 'リセット');
+        const warnEl = h('div', { class: 'warn' });
+        const stepsEl = h('div', {});
+        const canvas = h('canvas', {});
+        container.replaceChildren(
+          h('h2', {}, examples.gradDescent.title),
+          h('p', {}, '$f(x) = (x-2)^2 + 1$ の最小点を $x_{n+1} = x_n - \\eta f\'(x_n)$ で探します。$f\'$ は二重数で自動計算。'),
+          h('div', { class: 'panel' },
+            h('div', {},
+              x0.container,
+              eta.container,
+              h('div', { style: { marginTop: '12px' } }, stepBtn, ' ', tenBtn, ' ', resetBtn),
+              warnEl,
+              stepsEl),
+            h('div', {}, canvas)),
+        );
+        typeset(container);
+        const ctx = setupCanvas(canvas, 600, 360);
+        const m = makePlotMap({ xMin: -5, xMax: 9, yMin: 0, yMax: 50, w: 600, h: 360 });
+        const drawAll = () => {
+          ctx.clearRect(0, 0, m.w, m.h);
+          drawAxes(ctx, m);
+          drawCurve(ctx, m, examples.gradDescent.fn);
+          ctx.save();
+          ctx.strokeStyle = COLORS.tangent;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          state.history.forEach((p, i) => {
+            const px = m.toX(p.x), py = m.toY(p.fx);
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          });
+          ctx.stroke();
+          ctx.restore();
+          state.history.forEach(p => drawPoint(ctx, m, p.x, p.fx));
+        };
+        const renderHistory = () => {
+          const recent = state.history.slice(-8);
+          const offset = state.history.length - recent.length;
+          const lines = recent.map((r, i) =>
+            `\\text{step } ${offset + i}:\\; x = ${r.x.toFixed(4)},\\; f(x) = ${r.fx.toFixed(4)}`);
+          renderSteps(stepsEl, lines.map(l => ({ latex: l })));
+          const last = state.history[state.history.length - 1];
+          warnEl.textContent = !Number.isFinite(last.fx) || Math.abs(last.x) > 1e6
+            ? '⚠ 発散しました。学習率 η を小さくしてください。' : '';
+        };
+        const doStep = () => {
+          const last = state.history[state.history.length - 1];
+          const r = examples.gradDescent.step(last.x, state.eta);
+          state.history.push({ x: r.x, fx: examples.gradDescent.fn(r.x) });
+          drawAll(); renderHistory();
+        };
+        const reset = () => {
+          state.history = [{ x: state.x0, fx: examples.gradDescent.fn(state.x0) }];
+          drawAll(); renderHistory();
+        };
+        x0.slider.addEventListener('input', e => {
+          state.x0 = parseFloat(e.target.value);
+          x0.valueEl.textContent = state.x0.toFixed(2);
+          reset();
+        });
+        eta.slider.addEventListener('input', e => {
+          state.eta = parseFloat(e.target.value);
+          eta.valueEl.textContent = state.eta.toFixed(2);
+        });
+        stepBtn.addEventListener('click', doStep);
+        tenBtn.addEventListener('click', () => { for (let i = 0; i < 10; i++) doStep(); });
+        resetBtn.addEventListener('click', reset);
         drawAll(); renderHistory();
       },
     };
