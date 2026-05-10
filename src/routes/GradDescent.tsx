@@ -131,7 +131,7 @@ export function GradDescent() {
               const idx = offset + i;
               const tex = `\\text{step } ${idx}:\\; x = ${r.x.toFixed(4)},\\; f(x) = ${r.fx.toFixed(4)}`;
               return (
-                <div key={idx}>
+                <div key={idx} data-testid="grad-step">
                   <StepRow tex={tex} />
                 </div>
               );

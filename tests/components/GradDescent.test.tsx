@@ -94,4 +94,26 @@ describe('GradDescent route', () => {
     expect(screen.getByRole('button', { name: '1 ステップ' })).toBeEnabled();
     expect(screen.getByRole('button', { name: '10 ステップ' })).toBeEnabled();
   });
+
+  it('"10 ステップ" button appends 10 rows; only last 8 are rendered (v1 fidelity)', () => {
+    renderGD();
+    // Initial state: 1 seed row in history → 1 visible step row.
+    expect(screen.queryAllByTestId('grad-step')).toHaveLength(1);
+    // Click "10 ステップ" once. Default x0=5, eta=0.1: bounded trajectory,
+    // no divergence → history grows from 1 to 11. v1 last-8 slice → 8 rows.
+    fireEvent.click(screen.getByRole('button', { name: '10 ステップ' }));
+    expect(screen.queryAllByTestId('grad-step')).toHaveLength(8);
+  });
+
+  it('shows last 8 rows with global step indices 3..10 after one "10 ステップ" click', () => {
+    const { container } = renderGD();
+    fireEvent.click(screen.getByRole('button', { name: '10 ステップ' }));
+    // GradDescent emits LaTeX `\text{step } i:` per row. Last 8 of 0..10 → 3..10.
+    expect(container.textContent).toContain('\\text{step } 3:');
+    expect(container.textContent).toContain('\\text{step } 10:');
+    // Steps 0..2 must be sliced off.
+    expect(container.textContent).not.toContain('\\text{step } 0:');
+    expect(container.textContent).not.toContain('\\text{step } 1:');
+    expect(container.textContent).not.toContain('\\text{step } 2:');
+  });
 });
