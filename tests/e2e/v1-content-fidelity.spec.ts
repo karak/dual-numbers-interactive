@@ -34,7 +34,7 @@ const PROBES: Probe[] = [
   },
   {
     hash: '/poly',
-    contains: ['多項式の自動微分'],
+    contains: ['多項式の自動微分', 'を二重数で評価'],
   },
   {
     hash: '/trig',
