@@ -59,4 +59,30 @@ describe('Newton route', () => {
     // v1 always keeps the initial-x0 row visible after reset.
     expect(screen.queryAllByTestId('newton-step')).toHaveLength(1);
   });
+
+  it('shows the v1 description fragment "の根を"', () => {
+    const { container } = renderNewton();
+    expect(container.textContent).toContain('の根を');
+  });
+
+  it('renders the v1 verbatim warning when seeded history has near-zero last dfx', () => {
+    // Seed a history whose final-finite dfx is near 0 — the only deterministic
+    // way to trigger the warn (Newton on x^3-2x-5 from -3..3 never produces
+    // |f'|<1e-6).
+    render(
+      <MathJaxContext version={3}>
+        <MemoryRouter>
+          <Newton
+            initialHistory={[
+              { x: 0.815, fx: -6.46, dfx: 1e-9 },
+              { x: 0.815, fx: -6.46, dfx: NaN },
+            ]}
+          />
+        </MemoryRouter>
+      </MathJaxContext>,
+    );
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent("f'(x) が 0 に近い：発散の恐れ。初期値を変えてみてください。");
+    expect(alert).toHaveTextContent('⚠');
+  });
 });

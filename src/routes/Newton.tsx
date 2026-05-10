@@ -5,7 +5,7 @@ import { Slider } from '../components/Slider';
 import { StepRow } from '../components/StepRow';
 import { Warn } from '../components/Warn';
 import { drawAxes, drawCurve, drawPoint, drawTangent, makePlotMap } from '../lib/plot';
-import { newtonStep } from '../lib/newton';
+import { isNewWarningTriggered, newtonStep } from '../lib/newton';
 
 // v1 source: examples.newton in docs/legacy/index.html
 //   - heading: 'Newton 法'
@@ -28,9 +28,18 @@ const initialHistory = (x0: number): HistoryRow[] => [
   { x: x0, fx: polyFn(x0), dfx: NaN },
 ];
 
-export function Newton() {
+interface NewtonProps {
+  // Optional seed for tests: lets a test inject a history whose final-finite
+  // dfx is near zero to exercise the (otherwise unreachable in -3..3) warning
+  // branch deterministically. Production usage passes nothing.
+  initialHistory?: ReadonlyArray<HistoryRow>;
+}
+
+export function Newton({ initialHistory: seed }: NewtonProps = {}) {
   const [x0, setX0] = useState(2);
-  const [history, setHistory] = useState<HistoryRow[]>(() => initialHistory(2));
+  const [history, setHistory] = useState<HistoryRow[]>(() =>
+    seed ? [...seed] : initialHistory(2),
+  );
 
   const doStep = () => {
     setHistory((h) => {
@@ -57,9 +66,9 @@ export function Newton() {
   };
   const reset = () => setHistory(initialHistory(x0));
 
-  const last = history[history.length - 1];
-  const showWarn =
-    last && Number.isFinite(last.dfx) && Math.abs(last.dfx) < 1e-6;
+  // Deviation from v1: scan history for the most recent finite dfx instead
+  // of trusting the just-pushed (NaN-dfx) row. See `isNewWarningTriggered`.
+  const showWarn = isNewWarningTriggered(history);
 
   const draw = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
     const m = makePlotMap({ xMin: -3, xMax: 3, yMin: -10, yMax: 10, w, h });
