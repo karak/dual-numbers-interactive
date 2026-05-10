@@ -17,4 +17,4 @@ export function gradStep(prev: number, eta: number): GradStepResult {
 }
 
 export const isDiverged = (r: GradStepResult): boolean =>
-  Math.abs(r.x) > 100 || !Number.isFinite(r.fx) || !Number.isFinite(r.x);
+  Math.abs(r.x) > 1e6 || !Number.isFinite(r.fx) || !Number.isFinite(r.x);
