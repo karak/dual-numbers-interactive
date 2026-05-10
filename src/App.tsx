@@ -3,6 +3,7 @@ import { MathJaxContext } from 'better-react-mathjax';
 import { Layout } from './components/Layout';
 import { Intro } from './routes/Intro';
 import { Polynomial } from './routes/Polynomial';
+import { Trig } from './routes/Trig';
 
 const mathjaxConfig = {
   loader: { load: ['input/tex', 'output/svg'] },
@@ -23,7 +24,7 @@ export default function App() {
             <Route index element={<Navigate to="/intro" replace />} />
             <Route path="intro"        element={<Intro />} />
             <Route path="poly"         element={<Polynomial />} />
-            <Route path="trig"         element={<Placeholder name="三角関数 / Taylor" />} />
+            <Route path="trig"         element={<Trig />} />
             <Route path="chain"        element={<Placeholder name="連鎖律" />} />
             <Route path="newton"       element={<Placeholder name="Newton 法" />} />
             <Route path="grad-descent" element={<Placeholder name="勾配降下" />} />
