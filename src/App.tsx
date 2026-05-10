@@ -2,6 +2,7 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { MathJaxContext } from 'better-react-mathjax';
 import { Layout } from './components/Layout';
 import { Intro } from './routes/Intro';
+import { Polynomial } from './routes/Polynomial';
 
 const mathjaxConfig = {
   loader: { load: ['input/tex', 'output/svg'] },
@@ -21,7 +22,7 @@ export default function App() {
           <Route element={<Layout />}>
             <Route index element={<Navigate to="/intro" replace />} />
             <Route path="intro"        element={<Intro />} />
-            <Route path="poly"         element={<Placeholder name="多項式" />} />
+            <Route path="poly"         element={<Polynomial />} />
             <Route path="trig"         element={<Placeholder name="三角関数 / Taylor" />} />
             <Route path="chain"        element={<Placeholder name="連鎖律" />} />
             <Route path="newton"       element={<Placeholder name="Newton 法" />} />
