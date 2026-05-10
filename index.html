@@ -190,6 +190,15 @@
       const r = examples.chain.compute({ x: 1, inner: 'sq', outer: 'exp' });
       return eq(r.value, Math.E) && eq(r.derivative, 2 * Math.E);
     });
+    test('newton step from x=2 toward root of x^3-2x-5', () => {
+      const r = examples.newton.step(2);
+      return eq(r.x, 2.1) && eq(r.fx, -1) && eq(r.dfx, 10);
+    });
+    test('newton converges from x=2 in <10 steps', () => {
+      let x = 2;
+      for (let i = 0; i < 10; i++) x = examples.newton.step(x).x;
+      return Math.abs(x*x*x - 2*x - 5) < 1e-9;
+    });
     // === UI helpers ===
     function h(tag, attrs = {}, ...children) {
       const el = document.createElement(tag);
@@ -557,6 +566,85 @@
           state.x = parseFloat(e.target.value); x.valueEl.textContent = state.x.toFixed(2); update();
         });
         update();
+      },
+    };
+
+    examples.newton = {
+      title: 'Newton 法',
+      hash: '#/newton',
+      initialState() { return { x0: 2.0, history: [] }; },
+      fn(x) { return x*x*x - 2*x - 5; },
+      step(x) {
+        const d = Dual.v(x);
+        const r = d.pow(3).sub(Dual.c(2).mul(d)).sub(Dual.c(5));
+        const fx = r.re, dfx = r.du;
+        const xn = Math.abs(dfx) < 1e-12 ? x : x - fx / dfx;
+        return { x: xn, fx, dfx, diverged: Math.abs(dfx) < 1e-12 };
+      },
+      render(container, state) {
+        if (state.history.length === 0)
+          state.history = [{ x: state.x0, fx: examples.newton.fn(state.x0), dfx: NaN }];
+        const x0 = makeSlider({ min: -3, max: 3, step: 0.01, value: state.x0, label: '初期値 $x_0$' });
+        const stepBtn = h('button', {}, '1 ステップ');
+        const fiveBtn = h('button', {}, '5 ステップ');
+        const resetBtn = h('button', {}, 'リセット');
+        const warnEl = h('div', { class: 'warn' });
+        const stepsEl = h('div', {});
+        const canvas = h('canvas', {});
+        container.replaceChildren(
+          h('h2', {}, examples.newton.title),
+          h('p', {}, '$f(x) = x^3 - 2x - 5$ の根を $x_{n+1} = x_n - f(x_n)/f\'(x_n)$ で求めます。$f\'$ は二重数で自動計算。'),
+          h('div', { class: 'panel' },
+            h('div', {},
+              x0.container,
+              h('div', { style: { marginTop: '12px' } }, stepBtn, ' ', fiveBtn, ' ', resetBtn),
+              warnEl,
+              stepsEl),
+            h('div', {}, canvas)),
+        );
+        typeset(container);
+        const ctx = setupCanvas(canvas, 600, 360);
+        const m = makePlotMap({ xMin: -3, xMax: 3, yMin: -10, yMax: 10, w: 600, h: 360 });
+        const drawAll = () => {
+          ctx.clearRect(0, 0, m.w, m.h);
+          drawAxes(ctx, m);
+          drawCurve(ctx, m, examples.newton.fn);
+          state.history.forEach((row, i) => {
+            ctx.globalAlpha = i === state.history.length - 1 ? 1 : 0.3;
+            if (Number.isFinite(row.dfx)) drawTangent(ctx, m, row.x, row.fx, row.dfx);
+            drawPoint(ctx, m, row.x, row.fx);
+            ctx.globalAlpha = 1;
+          });
+        };
+        const renderHistory = () => {
+          const lines = state.history.map((r, i) =>
+            `\\text{step } ${i}:\\; x = ${r.x.toFixed(6)},\\; f(x) = ${r.fx.toFixed(6)}` +
+            (Number.isFinite(r.dfx) ? `,\\; f'(x) = ${r.dfx.toFixed(6)}` : ''));
+          renderSteps(stepsEl, lines.map(l => ({ latex: l })));
+          const last = state.history[state.history.length - 1];
+          warnEl.textContent = last && Number.isFinite(last.dfx) && Math.abs(last.dfx) < 1e-6
+            ? '⚠ f\'(x) が 0 に近い：発散の恐れ。初期値を変えてみてください。' : '';
+        };
+        const doStep = () => {
+          const last = state.history[state.history.length - 1];
+          const next = examples.newton.step(last.x);
+          last.dfx = next.dfx;
+          state.history.push({ x: next.x, fx: examples.newton.fn(next.x), dfx: NaN });
+          drawAll(); renderHistory();
+        };
+        x0.slider.addEventListener('input', e => {
+          state.x0 = parseFloat(e.target.value);
+          x0.valueEl.textContent = state.x0.toFixed(2);
+          state.history = [{ x: state.x0, fx: examples.newton.fn(state.x0), dfx: NaN }];
+          drawAll(); renderHistory();
+        });
+        stepBtn.addEventListener('click', doStep);
+        fiveBtn.addEventListener('click', () => { for (let i = 0; i < 5; i++) doStep(); });
+        resetBtn.addEventListener('click', () => {
+          state.history = [{ x: state.x0, fx: examples.newton.fn(state.x0), dfx: NaN }];
+          drawAll(); renderHistory();
+        });
+        drawAll(); renderHistory();
       },
     };
     // === Router ===
