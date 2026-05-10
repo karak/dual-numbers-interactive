@@ -171,6 +171,14 @@
       const r = examples.poly.compute({ x: 0 });
       return eq(r.value, -1) && eq(r.derivative, 1);
     });
+    test('trig compute sin: f(0)=0, f\'(0)=1', () => {
+      const r = examples.trig.compute({ x: 0, fn: 'sin', terms: 1 });
+      return eq(r.value, 0) && eq(r.derivative, 1);
+    });
+    test('trig compute exp: f(1)=e, f\'(1)=e', () => {
+      const r = examples.trig.compute({ x: 1, fn: 'exp', terms: 1 });
+      return eq(r.value, Math.E) && eq(r.derivative, Math.E);
+    });
     // === UI helpers ===
     function h(tag, attrs = {}, ...children) {
       const el = document.createElement(tag);
@@ -348,6 +356,94 @@
           xVal.textContent = state.x.toFixed(2);
           update();
         });
+        update();
+      },
+    };
+
+    examples.trig = {
+      title: 'sin / cos / exp と Taylor 展開',
+      hash: '#/trig',
+      initialState() { return { x: 1.0, fn: 'sin', terms: 1 }; },
+      funcs: {
+        sin: { f: x => Math.sin(x), d: (x, i) => Math.sin(x + i*Math.PI/2), latex: '\\sin(x)' },
+        cos: { f: x => Math.cos(x), d: (x, i) => Math.cos(x + i*Math.PI/2), latex: '\\cos(x)' },
+        exp: { f: x => Math.exp(x), d: x => Math.exp(x),                    latex: 'e^x' },
+      },
+      compute(state) {
+        const x = Dual.v(state.x);
+        const r = state.fn === 'sin' ? x.sin() : state.fn === 'cos' ? x.cos() : x.exp();
+        const a = state.x;
+        const lineExpand = state.fn === 'exp'
+          ? `e^{${a}+\\varepsilon} = e^{${a}} \\cdot e^{\\varepsilon} = e^{${a}}(1 + \\varepsilon \\,{\\color{#b8b3a8}+\\, \\tfrac{\\varepsilon^2}{2}+\\cdots})`
+          : state.fn === 'sin'
+          ? `\\sin(${a}+\\varepsilon) = \\sin(${a})\\cos(\\varepsilon) + \\cos(${a})\\sin(\\varepsilon) \\;\\;(\\cos\\varepsilon\\to 1,\\;\\sin\\varepsilon\\to\\varepsilon)`
+          : `\\cos(${a}+\\varepsilon) = \\cos(${a})\\cos(\\varepsilon) - \\sin(${a})\\sin(\\varepsilon) \\;\\;(\\cos\\varepsilon\\to 1,\\;\\sin\\varepsilon\\to\\varepsilon)`;
+        const steps = [
+          { latex: `f(x) = ${this.funcs[state.fn].latex}` },
+          { latex: lineExpand },
+          { latex: `\\quad = ${r.re.toFixed(4)} + (${r.du.toFixed(4)})\\,\\varepsilon`, highlight: true },
+          { latex: `\\therefore f(${a}) = ${r.re.toFixed(4)}, \\quad f'(${a}) = ${r.du.toFixed(4)}` },
+        ];
+        return { value: r.re, derivative: r.du, steps };
+      },
+      taylorSum(fn, a, terms) {
+        return x => {
+          let sum = 0, fact = 1;
+          for (let k = 0; k < terms; k++) {
+            if (k > 0) fact *= k;
+            sum += fn.d(a, k) * Math.pow(x - a, k) / fact;
+          }
+          return sum;
+        };
+      },
+      render(container, state) {
+        const select = h('select', { id: 'trig-fn' },
+          h('option', { value: 'sin' }, 'sin x'),
+          h('option', { value: 'cos' }, 'cos x'),
+          h('option', { value: 'exp' }, 'e^x'));
+        select.value = state.fn;
+        const stepsEl = h('div', { id: 'trig-steps' });
+        const xVal = h('span', {}, state.x.toFixed(2));
+        const termsVal = h('span', {}, String(state.terms));
+        const slider = h('input', { type: 'range', min: '-3', max: '3', step: '0.01', value: state.x });
+        const addBtn = h('button', {}, '+ 項を追加');
+        const resetBtn = h('button', {}, 'リセット');
+        const canvas = h('canvas', {});
+        container.replaceChildren(
+          h('h2', {}, examples.trig.title),
+          h('div', { class: 'panel' },
+            h('div', {},
+              h('div', { style: { marginBottom: '12px' } }, h('label', {}, '関数: '), select),
+              stepsEl,
+              h('div', { style: { marginTop: '16px' } }, h('label', {}, '$x$ = ', xVal), slider),
+              h('div', { style: { marginTop: '12px' } },
+                h('label', {}, 'Taylor 次数: ', termsVal), ' ', addBtn, ' ', resetBtn)),
+            h('div', {}, canvas)),
+        );
+        const ctx = setupCanvas(canvas, 600, 360);
+        const update = () => {
+          const fnDef = examples.trig.funcs[state.fn];
+          const yRange = state.fn === 'exp' ? [-1, 20] : [-2, 2];
+          const m = makePlotMap({ xMin: -3, xMax: 3, yMin: yRange[0], yMax: yRange[1], w: 600, h: 360 });
+          const r = examples.trig.compute(state);
+          renderSteps(stepsEl, r.steps);
+          termsVal.textContent = String(state.terms);
+          ctx.clearRect(0, 0, m.w, m.h);
+          drawAxes(ctx, m);
+          drawCurve(ctx, m, fnDef.f);
+          drawCurve(ctx, m, examples.trig.taylorSum(fnDef, state.x, state.terms), { color: '#6b4eff', width: 1.5 });
+          drawPoint(ctx, m, state.x, fnDef.f(state.x));
+        };
+        select.addEventListener('change', e => { state.fn = e.target.value; state.terms = 1; update(); });
+        slider.addEventListener('input', e => {
+          state.x = parseFloat(e.target.value); xVal.textContent = state.x.toFixed(2); update();
+        });
+        addBtn.addEventListener('click', () => {
+          const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (state.terms < 8) state.terms += reduce ? 3 : 1;
+          update();
+        });
+        resetBtn.addEventListener('click', () => { state.terms = 1; update(); });
         update();
       },
     };
