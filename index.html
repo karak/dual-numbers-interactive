@@ -264,6 +264,19 @@
       ctx.stroke();
       ctx.restore();
     }
+    let __sliderSeq = 0;
+    function makeSlider({ min, max, step, value, label, format = v => Number(v).toFixed(2) }) {
+      const id = 'slider-' + (++__sliderSeq);
+      const valueEl = h('span', {}, format(value));
+      const slider = h('input', {
+        type: 'range', id,
+        min: String(min), max: String(max), step: String(step), value: String(value),
+      });
+      const container = h('div', { style: { marginTop: '16px' } },
+        h('label', { for: id }, label, ' = ', valueEl),
+        slider);
+      return { container, slider, valueEl };
+    }
     function renderSteps(container, steps) {
       container.replaceChildren(...steps.map(s => {
         const cls = 'step-row' + (s.highlight ? ' highlight' : '') + (s.ghost ? ' ghost' : '');
@@ -327,19 +340,16 @@
         return { value: f.re, derivative: f.du, steps };
       },
       render(container, state) {
-        const stepsEl = h('div', { id: 'poly-steps' });
-        const xVal = h('span', { id: 'poly-x-val' }, state.x.toFixed(2));
-        const slider = h('input', { type: 'range', id: 'poly-slider', min: '-3', max: '3', step: '0.01', value: state.x });
-        const canvas = h('canvas', { id: 'poly-canvas' });
+        const stepsEl = h('div', {});
+        const x = makeSlider({ min: -3, max: 3, step: 0.01, value: state.x, label: '$x$' });
+        const canvas = h('canvas', {});
         container.replaceChildren(
           h('h2', {}, examples.poly.title),
           h('div', { class: 'panel' },
             h('div', {},
               h('p', {}, '$f(x) = x^3 - 2x^2 + x - 1$ を二重数で評価すると、実部に $f(x)$、$\\varepsilon$ 部に $f\'(x)$ が同時に出ます。'),
               stepsEl,
-              h('div', { style: { marginTop: '16px' } },
-                h('label', {}, '$x$ = ', xVal),
-                slider),
+              x.container,
             ),
             h('div', {}, canvas)),
         );
@@ -354,9 +364,9 @@
           drawTangent(ctx, m, state.x, r.value, r.derivative);
           drawPoint(ctx, m, state.x, r.value);
         };
-        slider.addEventListener('input', e => {
+        x.slider.addEventListener('input', e => {
           state.x = parseFloat(e.target.value);
-          xVal.textContent = state.x.toFixed(2);
+          x.valueEl.textContent = state.x.toFixed(2);
           update();
         });
         update();
@@ -400,15 +410,15 @@
         };
       },
       render(container, state) {
-        const select = h('select', { id: 'trig-fn' },
+        const selectId = 'trig-fn-' + (++__sliderSeq);
+        const select = h('select', { id: selectId },
           h('option', { value: 'sin' }, 'sin x'),
           h('option', { value: 'cos' }, 'cos x'),
           h('option', { value: 'exp' }, 'e^x'));
         select.value = state.fn;
-        const stepsEl = h('div', { id: 'trig-steps' });
-        const xVal = h('span', {}, state.x.toFixed(2));
+        const stepsEl = h('div', {});
+        const x = makeSlider({ min: -3, max: 3, step: 0.01, value: state.x, label: '$x$' });
         const termsVal = h('span', {}, String(state.terms));
-        const slider = h('input', { type: 'range', min: '-3', max: '3', step: '0.01', value: state.x });
         const addBtn = h('button', {}, '+ 項を追加');
         const resetBtn = h('button', {}, 'リセット');
         const canvas = h('canvas', {});
@@ -416,9 +426,9 @@
           h('h2', {}, examples.trig.title),
           h('div', { class: 'panel' },
             h('div', {},
-              h('div', { style: { marginBottom: '12px' } }, h('label', {}, '関数: '), select),
+              h('div', { style: { marginBottom: '12px' } }, h('label', { for: selectId }, '関数: '), select),
               stepsEl,
-              h('div', { style: { marginTop: '16px' } }, h('label', {}, '$x$ = ', xVal), slider),
+              x.container,
               h('div', { style: { marginTop: '12px' } },
                 h('label', {}, 'Taylor 次数: ', termsVal), ' ', addBtn, ' ', resetBtn)),
             h('div', {}, canvas)),
@@ -438,8 +448,8 @@
           drawPoint(ctx, m, state.x, fnDef.f(state.x));
         };
         select.addEventListener('change', e => { state.fn = e.target.value; state.terms = 1; update(); });
-        slider.addEventListener('input', e => {
-          state.x = parseFloat(e.target.value); xVal.textContent = state.x.toFixed(2); update();
+        x.slider.addEventListener('input', e => {
+          state.x = parseFloat(e.target.value); x.valueEl.textContent = state.x.toFixed(2); update();
         });
         addBtn.addEventListener('click', () => {
           if (state.terms < 8) state.terms += 1;
