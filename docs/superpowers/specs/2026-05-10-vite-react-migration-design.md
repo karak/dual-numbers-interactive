@@ -169,29 +169,29 @@ function useCanvas(draw: (ctx: CanvasRenderingContext2D, w: number, h: number) =
 
 ```ts
 export class Dual {
-  readonly a: number;  // value
-  readonly b: number;  // derivative
-  constructor(a: number, b: number);
-  static c(x: number): Dual;          // constant
-  static v(x: number): Dual;          // variable
-  add(other: Dual | number): Dual;
-  sub(other: Dual | number): Dual;
-  mul(other: Dual | number): Dual;
-  div(other: Dual | number): Dual;
+  readonly re: number;  // value (real part)
+  readonly du: number;  // derivative (dual part, coefficient of ε)
+  constructor(re: number, du?: number);
+  static c(x: number): Dual;          // constant: du = 0
+  static v(x: number): Dual;          // variable: du = 1
+  add(b: Dual): Dual;
+  sub(b: Dual): Dual;
+  mul(b: Dual): Dual;
+  div(b: Dual): Dual;
   neg(): Dual;
   pow(n: number): Dual;
   sin(): Dual;
   cos(): Dual;
   exp(): Dual;
   log(): Dual;
-  sqrt(): Dual;
 }
 ```
 
 不変条件:
 - 全メソッドが新しい `Dual` インスタンスを返す (immutable)
-- `a`, `b` は readonly
-- 数値オーバーフロー / NaN 伝播は現行と同じ振る舞いを保つ
+- `re`, `du` は readonly
+- `pow(0, n<1)` は `Dual(0, NaN)` を返す (現行ガード保持)
+- メソッドは `Dual` 同士のみ受け取る (`number` リテラル受け入れは現行未対応につき YAGNI)
 
 ## 6. ルート別コンポーネント仕様 (要点のみ)
 
