@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { newtonStep } from '../../src/lib/newton';
+import { newtonF, newtonStep } from '../../src/lib/newton';
 
 const eq = (a: number, b: number, eps = 1e-9) => Math.abs(a - b) < eps;
 
@@ -12,5 +12,18 @@ describe('newtonStep', () => {
     let x = 2;
     for (let i = 0; i < 10; i++) x = newtonStep(x).x;
     expect(Math.abs(x ** 3 - 2 * x - 5) < 1e-9).toBe(true);
+  });
+});
+
+describe('newtonF (f(x) = x^3 - 2x - 5)', () => {
+  it('newtonF(2) === -1 (8 - 4 - 5)', () => {
+    expect(newtonF(2)).toBe(-1);
+  });
+  it('newtonF(0) === -5', () => {
+    expect(newtonF(0)).toBe(-5);
+  });
+  it('agrees with newtonStep.fx at the same x', () => {
+    const r = newtonStep(2);
+    expect(newtonF(2)).toBe(r.fx);
   });
 });

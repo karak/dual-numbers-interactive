@@ -5,7 +5,7 @@ import { Slider } from '../components/Slider';
 import { StepRow } from '../components/StepRow';
 import { Warn } from '../components/Warn';
 import { drawAxes, drawCurve, drawPoint, drawTangent, makePlotMap } from '../lib/plot';
-import { isNewWarningTriggered, newtonStep } from '../lib/newton';
+import { isNewWarningTriggered, newtonF, newtonStep } from '../lib/newton';
 import { useThemeColors } from '../hooks/useThemeColors';
 
 // v1 source: examples.newton in docs/legacy/index.html
@@ -17,7 +17,6 @@ import { useThemeColors } from '../hooks/useThemeColors';
 //   - history row format: '\text{step } i:\; x = ...,\; f(x) = ...,\; f'(x) = ...'
 //   - warning when last finite |f'(x)| < 1e-6:
 //     '⚠ f'(x) が 0 に近い：発散の恐れ。初期値を変えてみてください。'
-const polyFn = (x: number): number => x * x * x - 2 * x - 5;
 
 interface HistoryRow {
   x: number;
@@ -26,7 +25,7 @@ interface HistoryRow {
 }
 
 const initialHistory = (x0: number): HistoryRow[] => [
-  { x: x0, fx: polyFn(x0), dfx: NaN },
+  { x: x0, fx: newtonF(x0), dfx: NaN },
 ];
 
 interface NewtonProps {
@@ -49,7 +48,7 @@ export function Newton({ initialHistory: seed }: NewtonProps = {}) {
       const updated: HistoryRow[] = h.map((row, i) =>
         i === h.length - 1 ? { ...row, dfx: next.dfx } : row,
       );
-      updated.push({ x: next.x, fx: polyFn(next.x), dfx: NaN });
+      updated.push({ x: next.x, fx: newtonF(next.x), dfx: NaN });
       return updated;
     });
   };
@@ -60,7 +59,7 @@ export function Newton({ initialHistory: seed }: NewtonProps = {}) {
         const last = out[out.length - 1];
         const next = newtonStep(last.x);
         out[out.length - 1] = { ...last, dfx: next.dfx };
-        out.push({ x: next.x, fx: polyFn(next.x), dfx: NaN });
+        out.push({ x: next.x, fx: newtonF(next.x), dfx: NaN });
       }
       return out;
     });
@@ -75,7 +74,7 @@ export function Newton({ initialHistory: seed }: NewtonProps = {}) {
   const draw = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
     const m = makePlotMap({ xMin: -3, xMax: 3, yMin: -10, yMax: 10, w, h });
     drawAxes(ctx, m, colors.border);
-    drawCurve(ctx, m, polyFn, { color: colors.curve });
+    drawCurve(ctx, m, newtonF, { color: colors.curve });
     history.forEach((row, i) => {
       ctx.globalAlpha = i === history.length - 1 ? 1 : 0.3;
       if (Number.isFinite(row.dfx)) drawTangent(ctx, m, row.x, row.fx, row.dfx, colors.tangent);

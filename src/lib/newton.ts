@@ -7,6 +7,13 @@ export interface NewtonStep {
   prev: number;    // x_n
 }
 
+// Plain JS evaluation of f(x) = x^3 - 2x - 5. Kept in lockstep with the
+// Dual-number polynomial encoded in `newtonStep` so canvas plotting and
+// history rows agree without each route re-implementing the same poly.
+export function newtonF(x: number): number {
+  return x * x * x - 2 * x - 5;
+}
+
 // f(x) = x^3 - 2x - 5
 export function newtonStep(prev: number): NewtonStep {
   const X = Dual.v(prev);

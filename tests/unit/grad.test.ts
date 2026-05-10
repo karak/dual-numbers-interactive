@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { gradStep, isGradDiverged } from '../../src/lib/grad';
+import { gradF, gradStep, isGradDiverged } from '../../src/lib/grad';
 
 const eq = (a: number, b: number, eps = 1e-9) => Math.abs(a - b) < eps;
 
@@ -60,5 +60,18 @@ describe('isGradDiverged', () => {
         { x: 2, fx: 1 },
       ]),
     ).toBe(false);
+  });
+});
+
+describe('gradF (f(x) = (x-2)^2 + 1)', () => {
+  it('gradF(0) === 5 ((0-2)^2 + 1)', () => {
+    expect(gradF(0)).toBe(5);
+  });
+  it('gradF(2) === 1 (minimum)', () => {
+    expect(gradF(2)).toBe(1);
+  });
+  it('agrees with gradStep.fx at the same x', () => {
+    const r = gradStep(5, 0.1);
+    expect(gradF(5)).toBe(r.fx);
   });
 });

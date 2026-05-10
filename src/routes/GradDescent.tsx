@@ -5,7 +5,7 @@ import { Slider } from '../components/Slider';
 import { StepRow } from '../components/StepRow';
 import { Warn } from '../components/Warn';
 import { drawAxes, drawCurve, drawPoint, makePlotMap } from '../lib/plot';
-import { gradStep, isGradDiverged, type HistRow } from '../lib/grad';
+import { gradF, gradStep, isGradDiverged, type HistRow } from '../lib/grad';
 import { useThemeColors } from '../hooks/useThemeColors';
 
 // v1 source: examples.gradDescent in docs/legacy/index.html
@@ -17,9 +17,8 @@ import { useThemeColors } from '../hooks/useThemeColors';
 //   - history starts with {x: x0, fx: f(x0)}
 //   - last 8 rows shown, format '\text{step } i:\; x = ...,\; f(x) = ...'
 //   - warning '⚠ 発散しました。学習率 η を小さくしてください。'
-const fnGD = (x: number): number => (x - 2) * (x - 2) + 1;
 
-const initialHistory = (x0: number): HistRow[] => [{ x: x0, fx: fnGD(x0) }];
+const initialHistory = (x0: number): HistRow[] => [{ x: x0, fx: gradF(x0) }];
 
 export function GradDescent() {
   const [x0, setX0] = useState(5);
@@ -30,7 +29,7 @@ export function GradDescent() {
     setHistory((h) => {
       const last = h[h.length - 1];
       const r = gradStep(last.x, eta);
-      return [...h, { x: r.x, fx: fnGD(r.x) }];
+      return [...h, { x: r.x, fx: gradF(r.x) }];
     });
   };
   const doTen = () => {
@@ -39,7 +38,7 @@ export function GradDescent() {
       for (let i = 0; i < 10; i++) {
         const last = out[out.length - 1];
         const r = gradStep(last.x, eta);
-        out.push({ x: r.x, fx: fnGD(r.x) });
+        out.push({ x: r.x, fx: gradF(r.x) });
       }
       return out;
     });
@@ -57,7 +56,7 @@ export function GradDescent() {
   const draw = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
     const m = makePlotMap({ xMin: -5, xMax: 9, yMin: 0, yMax: 50, w, h });
     drawAxes(ctx, m, colors.border);
-    drawCurve(ctx, m, fnGD, { color: colors.curve });
+    drawCurve(ctx, m, gradF, { color: colors.curve });
     ctx.save();
     ctx.strokeStyle = colors.tangent;
     ctx.lineWidth = 1.5;

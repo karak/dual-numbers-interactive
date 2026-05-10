@@ -8,6 +8,13 @@ export interface GradStepResult {
   eta: number;
 }
 
+// Plain JS evaluation of f(x) = (x-2)^2 + 1. Kept in lockstep with the
+// Dual-number polynomial encoded in `gradStep` so canvas plotting and
+// history rows agree without the route re-implementing the same poly.
+export function gradF(x: number): number {
+  return (x - 2) * (x - 2) + 1;
+}
+
 // f(x) = (x - 2)^2 + 1
 export function gradStep(prev: number, eta: number): GradStepResult {
   const r = Dual.v(prev).sub(Dual.c(2)).pow(2).add(Dual.c(1));
