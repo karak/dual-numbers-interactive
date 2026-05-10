@@ -182,6 +182,14 @@
       const r = examples.trig.compute({ x: 1, fn: 'exp', terms: 1 });
       return eq(r.value, Math.E) && eq(r.derivative, Math.E);
     });
+    test('chain compute sin(x^2) at x=1: value=sin(1), deriv=2cos(1)', () => {
+      const r = examples.chain.compute({ x: 1, inner: 'sq', outer: 'sin' });
+      return eq(r.value, Math.sin(1)) && eq(r.derivative, 2 * Math.cos(1));
+    });
+    test('chain compute exp(x^2) at x=1: value=e, deriv=2e', () => {
+      const r = examples.chain.compute({ x: 1, inner: 'sq', outer: 'exp' });
+      return eq(r.value, Math.E) && eq(r.derivative, 2 * Math.E);
+    });
     // === UI helpers ===
     function h(tag, attrs = {}, ...children) {
       const el = document.createElement(tag);
@@ -467,6 +475,87 @@
           update();
         });
         resetBtn.addEventListener('click', () => { state.terms = 1; update(); });
+        update();
+      },
+    };
+
+    examples.chain = {
+      title: '連鎖律',
+      hash: '#/chain',
+      initialState() { return { x: 1.0, inner: 'sq', outer: 'sin' }; },
+      inners: {
+        sq:   { apply: d => d.pow(2),         f: x => x*x,    df: x => 2*x,   latex: 'x^2' },
+        cube: { apply: d => d.pow(3),         f: x => x*x*x,  df: x => 3*x*x, latex: 'x^3' },
+        twox: { apply: d => d.mul(Dual.c(2)), f: x => 2*x,    df: () => 2,    latex: '2x' },
+      },
+      outers: {
+        sin: { apply: d => d.sin(), f: u => Math.sin(u), latex: '\\sin(u)' },
+        cos: { apply: d => d.cos(), f: u => Math.cos(u), latex: '\\cos(u)' },
+        exp: { apply: d => d.exp(), f: u => Math.exp(u), latex: 'e^u' },
+      },
+      compute(state) {
+        const inner = examples.chain.inners[state.inner];
+        const outer = examples.chain.outers[state.outer];
+        const x = Dual.v(state.x);
+        const u = inner.apply(x);
+        const y = outer.apply(u);
+        const a = state.x;
+        const steps = [
+          { latex: `g(x) = ${inner.latex}, \\quad f(u) = ${outer.latex}` },
+          { latex: `g(${a} + \\varepsilon) = ${u.re.toFixed(4)} + (${u.du.toFixed(4)})\\,\\varepsilon` },
+          { latex: `f(g(${a}+\\varepsilon)) = ${y.re.toFixed(4)} + (${y.du.toFixed(4)})\\,\\varepsilon`, highlight: true },
+          { latex: `(f \\circ g)'(${a}) = f'(g(${a})) \\cdot g'(${a}) = ${y.du.toFixed(4)}` },
+        ];
+        return { value: y.re, derivative: y.du, steps };
+      },
+      fn(state) {
+        const inner = examples.chain.inners[state.inner];
+        const outer = examples.chain.outers[state.outer];
+        return x => outer.f(inner.f(x));
+      },
+      render(container, state) {
+        const innerId = 'chain-inner-' + (++__sliderSeq);
+        const outerId = 'chain-outer-' + (++__sliderSeq);
+        const innerSel = h('select', { id: innerId },
+          h('option', { value: 'sq' }, 'x²'),
+          h('option', { value: 'cube' }, 'x³'),
+          h('option', { value: 'twox' }, '2x'));
+        const outerSel = h('select', { id: outerId },
+          h('option', { value: 'sin' }, 'sin u'),
+          h('option', { value: 'cos' }, 'cos u'),
+          h('option', { value: 'exp' }, 'e^u'));
+        innerSel.value = state.inner; outerSel.value = state.outer;
+        const stepsEl = h('div', {});
+        const x = makeSlider({ min: -2, max: 2, step: 0.01, value: state.x, label: '$x$' });
+        const canvas = h('canvas', {});
+        container.replaceChildren(
+          h('h2', {}, examples.chain.title),
+          h('div', { class: 'panel' },
+            h('div', {},
+              h('div', { style: { marginBottom: '12px' } },
+                h('label', { for: innerId }, '内側 g(x): '), innerSel, ' ',
+                h('label', { for: outerId, style: { marginLeft: '12px' } }, '外側 f(u): '), outerSel),
+              stepsEl,
+              x.container),
+            h('div', {}, canvas)),
+        );
+        const ctx = setupCanvas(canvas, 600, 360);
+        const update = () => {
+          const r = examples.chain.compute(state);
+          const yRange = state.outer === 'exp' ? [-1, 20] : [-2, 2];
+          const m = makePlotMap({ xMin: -2, xMax: 2, yMin: yRange[0], yMax: yRange[1], w: 600, h: 360 });
+          renderSteps(stepsEl, r.steps);
+          ctx.clearRect(0, 0, m.w, m.h);
+          drawAxes(ctx, m);
+          drawCurve(ctx, m, examples.chain.fn(state));
+          drawTangent(ctx, m, state.x, r.value, r.derivative);
+          drawPoint(ctx, m, state.x, r.value);
+        };
+        innerSel.addEventListener('change', e => { state.inner = e.target.value; update(); });
+        outerSel.addEventListener('change', e => { state.outer = e.target.value; update(); });
+        x.slider.addEventListener('input', e => {
+          state.x = parseFloat(e.target.value); x.valueEl.textContent = state.x.toFixed(2); update();
+        });
         update();
       },
     };
