@@ -6,16 +6,13 @@ import { Polynomial } from './routes/Polynomial';
 import { Trig } from './routes/Trig';
 import { Chain } from './routes/Chain';
 import { Newton } from './routes/Newton';
+import { GradDescent } from './routes/GradDescent';
 
 const mathjaxConfig = {
   loader: { load: ['input/tex', 'output/svg'] },
   tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
   svg: { fontCache: 'global' },
 };
-
-function Placeholder({ name }: { name: string }) {
-  return <h2 className="font-[var(--font-ui)]">{name} (coming soon)</h2>;
-}
 
 export default function App() {
   return (
@@ -29,7 +26,7 @@ export default function App() {
             <Route path="trig"         element={<Trig />} />
             <Route path="chain"        element={<Chain />} />
             <Route path="newton"       element={<Newton />} />
-            <Route path="grad-descent" element={<Placeholder name="勾配降下" />} />
+            <Route path="grad-descent" element={<GradDescent />} />
             <Route path="*"            element={<Navigate to="/intro" replace />} />
           </Route>
         </Routes>
