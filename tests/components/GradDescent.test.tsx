@@ -67,4 +67,31 @@ describe('GradDescent route', () => {
     renderGD();
     expect(screen.getAllByRole('slider')).toHaveLength(2);
   });
+
+  it('disables step buttons after divergence (reset stays enabled)', () => {
+    renderGD();
+    const sliders = screen.getAllByRole('slider') as HTMLInputElement[];
+    const etaSlider = sliders[1];
+    fireEvent.change(etaSlider, { target: { value: '1.2' } });
+    const stepBtn = screen.getByRole('button', { name: '1 ステップ' });
+    for (let i = 0; i < 40; i++) fireEvent.click(stepBtn);
+    // Sanity: divergence warning is up.
+    expect(screen.getByRole('alert')).toHaveTextContent('発散しました');
+    expect(screen.getByRole('button', { name: '1 ステップ' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '10 ステップ' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'リセット' })).toBeEnabled();
+  });
+
+  it('reset re-enables the step buttons after a previous divergence', () => {
+    renderGD();
+    const sliders = screen.getAllByRole('slider') as HTMLInputElement[];
+    const etaSlider = sliders[1];
+    fireEvent.change(etaSlider, { target: { value: '1.2' } });
+    const stepBtn = screen.getByRole('button', { name: '1 ステップ' });
+    for (let i = 0; i < 40; i++) fireEvent.click(stepBtn);
+    expect(screen.getByRole('button', { name: '1 ステップ' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'リセット' }));
+    expect(screen.getByRole('button', { name: '1 ステップ' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '10 ステップ' })).toBeEnabled();
+  });
 });
