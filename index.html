@@ -186,7 +186,7 @@
         if (v == null || v === false) continue;
         if (k === 'class') el.className = v;
         else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
-        else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+        else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
         else el.setAttribute(k, v);
       }
       for (const c of children.flat()) {
@@ -439,8 +439,7 @@
           state.x = parseFloat(e.target.value); xVal.textContent = state.x.toFixed(2); update();
         });
         addBtn.addEventListener('click', () => {
-          const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-          if (state.terms < 8) state.terms += reduce ? 3 : 1;
+          if (state.terms < 8) state.terms += 1;
           update();
         });
         resetBtn.addEventListener('click', () => { state.terms = 1; update(); });
