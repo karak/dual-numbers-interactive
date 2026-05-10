@@ -78,3 +78,37 @@ describe('Dual transcendentals', () => {
     expect(r.du).toBe(0);
   });
 });
+
+// Pin down silent-failure behavior: div/log do NOT throw on degenerate
+// inputs — they return ±Infinity / NaN. Callers must guard if needed.
+describe('Dual error paths', () => {
+  it('Dual.c(1).div(Dual.c(0)) → re=Infinity, du=NaN (1/0; quotient rule has 0/0)', () => {
+    const r = Dual.c(1).div(Dual.c(0));
+    expect(r.re).toBe(Infinity);
+    expect(Number.isNaN(r.du)).toBe(true);
+  });
+
+  it('Dual.v(1).div(Dual.c(0)) → re=Infinity, du=NaN', () => {
+    const r = Dual.v(1).div(Dual.c(0));
+    expect(r.re).toBe(Infinity);
+    expect(Number.isNaN(r.du)).toBe(true);
+  });
+
+  it('Dual.v(0).log() → re=-Infinity, du=Infinity (log(0) = -Inf, 1/0 = Inf)', () => {
+    const r = Dual.v(0).log();
+    expect(r.re).toBe(-Infinity);
+    expect(r.du).toBe(Infinity);
+  });
+
+  it('Dual.v(-1).log() → re=NaN, du=-1 (log(-1) NaN; derivative 1/-1 = -1)', () => {
+    const r = Dual.v(-1).log();
+    expect(Number.isNaN(r.re)).toBe(true);
+    expect(r.du).toBe(-1);
+  });
+
+  it('Dual.v(0).pow(-1) → re=Infinity, du=NaN (pow guard: re=0, n<1, du≠0)', () => {
+    const r = Dual.v(0).pow(-1);
+    expect(r.re).toBe(Infinity);
+    expect(Number.isNaN(r.du)).toBe(true);
+  });
+});

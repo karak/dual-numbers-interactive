@@ -26,6 +26,11 @@ export class Dual {
       this.re * b.du + this.du * b.re,
     );
   }
+  /**
+   * Returns this / b. Note: when b.re === 0, re becomes ±Infinity and du
+   * becomes NaN (the quotient rule's denominator r² is 0). No exception is
+   * thrown; callers must guard inputs if non-finite results are unacceptable.
+   */
   div(b: Dual): Dual {
     const r = b.re;
     return new Dual(this.re / r, (this.du * r - this.re * b.du) / (r * r));
@@ -43,6 +48,10 @@ export class Dual {
     const e = Math.exp(this.re);
     return new Dual(e, e * this.du);
   }
+  /**
+   * Returns natural log. Domain is re > 0; log(0) yields -Infinity, log(negative)
+   * yields NaN. The derivative 1/re is also unguarded. No exception is thrown.
+   */
   log(): Dual {
     return new Dual(Math.log(this.re), this.du / this.re);
   }
