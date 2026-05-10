@@ -70,6 +70,14 @@
         return new Dual(this.re / r, (this.du * r - this.re * b.du) / (r * r));
       }
       neg() { return new Dual(-this.re, -this.du); }
+      sin()  { return new Dual(Math.sin(this.re),  Math.cos(this.re) * this.du); }
+      cos()  { return new Dual(Math.cos(this.re), -Math.sin(this.re) * this.du); }
+      exp()  { const e = Math.exp(this.re); return new Dual(e, e * this.du); }
+      log()  { return new Dual(Math.log(this.re), this.du / this.re); }
+      pow(n) {
+        const r = Math.pow(this.re, n);
+        return new Dual(r, n * Math.pow(this.re, n - 1) * this.du);
+      }
     }
     // === Self-test ===
     const __tests = [];
@@ -122,6 +130,30 @@
     test('neg: f(x) = -x at x=3 gives f=-3, df=-1', () => {
       const r = Dual.v(3).neg();
       return eq(r.re, -3) && eq(r.du, -1);
+    });
+    test('sin: d/dx sin(x) at x=0 is cos(0)=1', () => {
+      const r = Dual.v(0).sin();
+      return eq(r.re, 0) && eq(r.du, 1);
+    });
+    test('cos: d/dx cos(x) at x=π/2 is -1', () => {
+      const r = Dual.v(Math.PI / 2).cos();
+      return eq(r.re, 0) && eq(r.du, -1);
+    });
+    test('exp: d/dx e^x at x=1 is e', () => {
+      const r = Dual.v(1).exp();
+      return eq(r.re, Math.E) && eq(r.du, Math.E);
+    });
+    test('log: d/dx ln(x) at x=2 is 1/2', () => {
+      const r = Dual.v(2).log();
+      return eq(r.re, Math.log(2)) && eq(r.du, 0.5);
+    });
+    test('pow: d/dx x^3 at x=2 is 12', () => {
+      const r = Dual.v(2).pow(3);
+      return eq(r.re, 8) && eq(r.du, 12);
+    });
+    test('chain via composition: d/dx sin(x^2) at x=2 = 4 cos(4)', () => {
+      const r = Dual.v(2).pow(2).sin();
+      return eq(r.re, Math.sin(4)) && eq(r.du, 4 * Math.cos(4));
     });
     // === UI helpers ===
     function h(tag, attrs = {}, ...children) {
