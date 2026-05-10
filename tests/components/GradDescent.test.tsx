@@ -56,4 +56,15 @@ describe('GradDescent route', () => {
     const { container } = renderGD();
     expect(container.textContent).toContain('の最小点を');
   });
+
+  it('renders the v1 verbatim slider-label prefixes "初期値" and "学習率"', () => {
+    const { container } = renderGD();
+    expect(container.textContent).toContain('初期値');
+    expect(container.textContent).toContain('学習率');
+  });
+
+  it('exposes exactly two sliders (x_0 + η)', () => {
+    renderGD();
+    expect(screen.getAllByRole('slider')).toHaveLength(2);
+  });
 });

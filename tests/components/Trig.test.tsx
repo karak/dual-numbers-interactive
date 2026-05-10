@@ -53,4 +53,20 @@ describe('Trig route', () => {
     expect(container.textContent).toContain('Taylor 次数: 8');
     expect(container.textContent).not.toContain('Taylor 次数: 9');
   });
+
+  it('shows v1 verbatim function-select label "関数:"', () => {
+    const { container } = renderTrig();
+    expect(container.textContent).toContain('関数:');
+  });
+
+  it('renders the v1 verbatim slider label "\\(x\\)" (jsdom: literal TeX)', () => {
+    const { container } = renderTrig();
+    expect(container.textContent).toContain('\\(x\\)');
+  });
+
+  it('exposes exactly one <select> (function select) and one slider (x)', () => {
+    const { container } = renderTrig();
+    expect(container.querySelectorAll('select')).toHaveLength(1);
+    expect(screen.getAllByRole('slider')).toHaveLength(1);
+  });
 });

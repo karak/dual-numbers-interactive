@@ -65,6 +65,16 @@ describe('Newton route', () => {
     expect(container.textContent).toContain('の根を');
   });
 
+  it('renders the v1 verbatim slider-label prefix "初期値"', () => {
+    const { container } = renderNewton();
+    expect(container.textContent).toContain('初期値');
+  });
+
+  it('exposes exactly one slider (the x_0 initial-value slider)', () => {
+    renderNewton();
+    expect(screen.getAllByRole('slider')).toHaveLength(1);
+  });
+
   it('renders the v1 verbatim warning when seeded history has near-zero last dfx', () => {
     // Seed a history whose final-finite dfx is near 0 — the only deterministic
     // way to trigger the warn (Newton on x^3-2x-5 from -3..3 never produces

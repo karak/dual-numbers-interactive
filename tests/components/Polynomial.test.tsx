@@ -42,4 +42,16 @@ describe('Polynomial route', () => {
     expect(screen.getByTestId('value')).toHaveTextContent('1.000');
     expect(screen.getByTestId('derivative')).toHaveTextContent('5.000');
   });
+
+  it('renders the v1 verbatim slider label "\\(x\\)" (jsdom: literal TeX)', () => {
+    const { container } = renderPoly();
+    // jsdom does not run MathJax — `<MathJax inline>{`\(x\)`}</MathJax>` appears
+    // in textContent verbatim.
+    expect(container.textContent).toContain('\\(x\\)');
+  });
+
+  it('exposes exactly one slider (the x slider)', () => {
+    renderPoly();
+    expect(screen.getAllByRole('slider')).toHaveLength(1);
+  });
 });

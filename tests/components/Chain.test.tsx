@@ -44,4 +44,15 @@ describe('Chain route', () => {
     expect(container.textContent).toContain('内側');
     expect(container.textContent).toContain('外側');
   });
+
+  it('renders the v1 verbatim slider label "\\(x\\)" (jsdom: literal TeX)', () => {
+    const { container } = renderChain();
+    expect(container.textContent).toContain('\\(x\\)');
+  });
+
+  it('exposes exactly two <select> (inner + outer) and one slider (x)', () => {
+    const { container } = renderChain();
+    expect(container.querySelectorAll('select')).toHaveLength(2);
+    expect(screen.getAllByRole('slider')).toHaveLength(1);
+  });
 });
