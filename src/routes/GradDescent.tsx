@@ -5,7 +5,7 @@ import { Slider } from '../components/Slider';
 import { StepRow } from '../components/StepRow';
 import { Warn } from '../components/Warn';
 import { drawAxes, drawCurve, drawPoint, makePlotMap } from '../lib/plot';
-import { gradStep } from '../lib/grad';
+import { gradStep, isGradDiverged, type HistRow } from '../lib/grad';
 import { useThemeColors } from '../hooks/useThemeColors';
 
 // v1 source: examples.gradDescent in docs/legacy/index.html
@@ -18,11 +18,6 @@ import { useThemeColors } from '../hooks/useThemeColors';
 //   - last 8 rows shown, format '\text{step } i:\; x = ...,\; f(x) = ...'
 //   - warning '⚠ 発散しました。学習率 η を小さくしてください。'
 const fnGD = (x: number): number => (x - 2) * (x - 2) + 1;
-
-interface HistRow {
-  x: number;
-  fx: number;
-}
 
 const initialHistory = (x0: number): HistRow[] => [{ x: x0, fx: fnGD(x0) }];
 
@@ -51,8 +46,7 @@ export function GradDescent() {
   };
   const reset = () => setHistory(initialHistory(x0));
 
-  const last = history[history.length - 1];
-  const diverged = !Number.isFinite(last.fx) || Math.abs(last.x) > 1e6;
+  const diverged = isGradDiverged(history);
 
   // v1 only displays the last 8 rows (preserving the global step index).
   const recent = history.slice(-8);
