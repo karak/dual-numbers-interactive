@@ -1,14 +1,21 @@
 import { useState } from 'react';
+import { MathJax } from 'better-react-mathjax';
 import { Plot } from '../components/Plot';
 import { Slider } from '../components/Slider';
 import { StepRow } from '../components/StepRow';
 import { drawAxes, drawCurve, drawPoint, drawTangent, makePlotMap } from '../lib/plot';
 import { fmt3 } from '../lib/format';
-import { polyCompute, polyF } from '../lib/poly';
+import { polyCompute, polyF, polySteps } from '../lib/poly';
 
+// v1 source: examples.poly in docs/legacy/index.html
+//   - heading: '多項式の自動微分'
+//   - description paragraph
+//   - 5-line derivation steps (highlight on row 4)
+//   - slider x: -3..3 step 0.01
 export function Polynomial() {
   const [x, setX] = useState(1);
   const { value, derivative } = polyCompute(x);
+  const steps = polySteps(x);
 
   const draw = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
     const cs = getComputedStyle(document.documentElement);
@@ -23,18 +30,29 @@ export function Polynomial() {
 
   return (
     <article>
-      <h2 className="font-[var(--font-ui)] mt-0">多項式</h2>
-      <p>
-        f(x) = x³ - 2x² + x - 1 を二重数で計算し、関数値と微分を同時に得ます。
-      </p>
+      <h2 className="font-[var(--font-ui)] mt-0">多項式の自動微分</h2>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_600px] gap-4">
         <div>
-          <Slider label="x" value={x} min={-3} max={3} step={0.05} onChange={setX} />
+          <p>
+            <MathJax inline>{`\\(f(x) = x^3 - 2x^2 + x - 1\\)`}</MathJax>{' '}
+            を二重数で評価すると、実部に <MathJax inline>{`\\(f(x)\\)`}</MathJax>、
+            <MathJax inline>{`\\(\\varepsilon\\)`}</MathJax> 部に{' '}
+            <MathJax inline>{`\\(f'(x)\\)`}</MathJax> が同時に出ます。
+          </p>
           <div className="mt-4 space-y-1">
-            <StepRow tex={`x = ${fmt3(x)}`} />
-            <StepRow tex={`f(x) = ${fmt3(value)}`} highlight />
-            <StepRow tex={`f'(x) = ${fmt3(derivative)}`} highlight />
+            {steps.map((s, i) => (
+              <StepRow key={i} tex={s.latex} highlight={s.highlight} ghost={s.ghost} />
+            ))}
           </div>
+          <Slider
+            label={<MathJax inline>{`\\(x\\)`}</MathJax>}
+            value={x}
+            min={-3}
+            max={3}
+            step={0.01}
+            onChange={setX}
+          />
+          {/* Numeric value/derivative readout retained for testability and a11y. */}
           <div className="mt-2 text-sm text-[var(--color-ink-soft)]">
             <span data-testid="value">{fmt3(value)}</span>
             {' / '}
