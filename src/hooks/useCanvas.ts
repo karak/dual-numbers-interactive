@@ -8,8 +8,6 @@ export type CanvasDrawFn = (
 
 export function useCanvas(draw: CanvasDrawFn) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const drawRef = useRef(draw);
-  drawRef.current = draw;
 
   const render = useCallback(() => {
     const canvas = canvasRef.current;
@@ -25,8 +23,8 @@ export function useCanvas(draw: CanvasDrawFn) {
     if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
-    drawRef.current(ctx, w, h);
-  }, []);
+    draw(ctx, w, h);
+  }, [draw]);
 
   useEffect(() => {
     render();
@@ -36,11 +34,6 @@ export function useCanvas(draw: CanvasDrawFn) {
     ro.observe(canvas);
     return () => ro.disconnect();
   }, [render]);
-
-  // Re-render whenever draw identity changes (i.e., dependent state changed)
-  useEffect(() => {
-    render();
-  });
 
   return canvasRef;
 }
