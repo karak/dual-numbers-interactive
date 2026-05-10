@@ -29,6 +29,11 @@ describe('Polynomial route', () => {
     expect(container.textContent).toContain('x^3 - 2x^2 + x - 1');
   });
 
+  it('shows the v1 description fragment "を二重数で評価"', () => {
+    const { container } = renderPoly();
+    expect(container.textContent).toContain('を二重数で評価');
+  });
+
   it('updates value/derivative display when slider moves to x=2', () => {
     renderPoly();
     const slider = screen.getByRole('slider') as HTMLInputElement;
