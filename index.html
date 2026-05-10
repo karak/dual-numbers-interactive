@@ -76,6 +76,9 @@
       log()  { return new Dual(Math.log(this.re), this.du / this.re); }
       pow(n) {
         const r = Math.pow(this.re, n);
+        if (this.re === 0 && n < 1) {
+          return new Dual(r, this.du === 0 ? 0 : NaN);
+        }
         return new Dual(r, n * Math.pow(this.re, n - 1) * this.du);
       }
     }
@@ -199,7 +202,7 @@
     function typeset(container) {
       if (!window.MathJax || !MathJax.typesetPromise) return;
       if (MathJax.typesetClear) MathJax.typesetClear([container]);
-      MathJax.typesetPromise([container]);
+      MathJax.typesetPromise([container]).catch(err => console.error('[MathJax]', err));
     }
     function makePlotMap({ xMin, xMax, yMin, yMax, w, h }) {
       return {
@@ -367,7 +370,7 @@
       funcs: {
         sin: { f: x => Math.sin(x), d: (x, i) => Math.sin(x + i*Math.PI/2), latex: '\\sin(x)' },
         cos: { f: x => Math.cos(x), d: (x, i) => Math.cos(x + i*Math.PI/2), latex: '\\cos(x)' },
-        exp: { f: x => Math.exp(x), d: x => Math.exp(x),                    latex: 'e^x' },
+        exp: { f: x => Math.exp(x), d: (x, _i) => Math.exp(x),              latex: 'e^x' },
       },
       compute(state) {
         const x = Dual.v(state.x);
@@ -379,7 +382,7 @@
           ? `\\sin(${a}+\\varepsilon) = \\sin(${a})\\cos(\\varepsilon) + \\cos(${a})\\sin(\\varepsilon) \\;\\;(\\cos\\varepsilon\\to 1,\\;\\sin\\varepsilon\\to\\varepsilon)`
           : `\\cos(${a}+\\varepsilon) = \\cos(${a})\\cos(\\varepsilon) - \\sin(${a})\\sin(\\varepsilon) \\;\\;(\\cos\\varepsilon\\to 1,\\;\\sin\\varepsilon\\to\\varepsilon)`;
         const steps = [
-          { latex: `f(x) = ${this.funcs[state.fn].latex}` },
+          { latex: `f(x) = ${examples.trig.funcs[state.fn].latex}` },
           { latex: lineExpand },
           { latex: `\\quad = ${r.re.toFixed(4)} + (${r.du.toFixed(4)})\\,\\varepsilon`, highlight: true },
           { latex: `\\therefore f(${a}) = ${r.re.toFixed(4)}, \\quad f'(${a}) = ${r.du.toFixed(4)}` },
