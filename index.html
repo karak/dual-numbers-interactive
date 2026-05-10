@@ -57,7 +57,20 @@
   </div>
   <script>
     'use strict';
-    // === Dual class === (Task 3, 4)
+    // === Dual class ===
+    class Dual {
+      constructor(re, du = 0) { this.re = re; this.du = du; }
+      static c(x) { return new Dual(x, 0); }
+      static v(x) { return new Dual(x, 1); }
+      add(b) { return new Dual(this.re + b.re, this.du + b.du); }
+      sub(b) { return new Dual(this.re - b.re, this.du - b.du); }
+      mul(b) { return new Dual(this.re * b.re, this.re * b.du + this.du * b.re); }
+      div(b) {
+        const r = b.re;
+        return new Dual(this.re / r, (this.du * r - this.re * b.du) / (r * r));
+      }
+      neg() { return new Dual(-this.re, -this.du); }
+    }
     // === Self-test ===
     const __tests = [];
     function test(name, fn) { __tests.push({ name, fn }); }
@@ -77,6 +90,39 @@
     const eq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 
     test('runner sanity', () => 1 + 1 === 2);
+    test('Dual.c is constant (du = 0)', () => {
+      const a = Dual.c(5);
+      return eq(a.re, 5) && eq(a.du, 0);
+    });
+    test('Dual.v is variable (du = 1)', () => {
+      const a = Dual.v(3);
+      return eq(a.re, 3) && eq(a.du, 1);
+    });
+    test('add: f(x) = x + 2 at x=3 gives f=5, df=1', () => {
+      const r = Dual.v(3).add(Dual.c(2));
+      return eq(r.re, 5) && eq(r.du, 1);
+    });
+    test('sub: f(x) = x - 4 at x=10 gives f=6, df=1', () => {
+      const r = Dual.v(10).sub(Dual.c(4));
+      return eq(r.re, 6) && eq(r.du, 1);
+    });
+    test('mul: f(x) = x*x at x=3 gives f=9, df=6', () => {
+      const x = Dual.v(3);
+      const r = x.mul(x);
+      return eq(r.re, 9) && eq(r.du, 6);
+    });
+    test('div: f(x) = x/2 at x=8 gives f=4, df=0.5', () => {
+      const r = Dual.v(8).div(Dual.c(2));
+      return eq(r.re, 4) && eq(r.du, 0.5);
+    });
+    test("div quotient rule: f(x)=1/x at x=2 gives df=-0.25", () => {
+      const r = Dual.c(1).div(Dual.v(2));
+      return eq(r.re, 0.5) && eq(r.du, -0.25);
+    });
+    test('neg: f(x) = -x at x=3 gives f=-3, df=-1', () => {
+      const r = Dual.v(3).neg();
+      return eq(r.re, -3) && eq(r.du, -1);
+    });
     // === UI helpers ===
     function h(tag, attrs = {}, ...children) {
       const el = document.createElement(tag);
