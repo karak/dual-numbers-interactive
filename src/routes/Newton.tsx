@@ -107,8 +107,8 @@ export function Newton() {
           </div>
           {showWarn && (
             <Warn>
-              ⚠ <MathJax inline>{`\\(f'(x)\\)`}</MathJax> が 0
-              に近い：発散の恐れ。初期値を変えてみてください。
+              {/* v1 uses plain-text `f'(x)` (no MathJax) inside .warn — match verbatim. */}
+              ⚠ f'(x) が 0 に近い：発散の恐れ。初期値を変えてみてください。
             </Warn>
           )}
           <div className="mt-4 space-y-1">

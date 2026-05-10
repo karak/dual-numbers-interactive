@@ -118,8 +118,8 @@ export function GradDescent() {
           </div>
           {diverged && (
             <Warn>
-              ⚠ 発散しました。学習率 <MathJax inline>{`\\(\\eta\\)`}</MathJax>{' '}
-              を小さくしてください。
+              {/* v1 uses plain-text `η` (no MathJax) inside .warn — match verbatim. */}
+              ⚠ 発散しました。学習率 η を小さくしてください。
             </Warn>
           )}
           <div className="mt-4 space-y-1">
