@@ -11,7 +11,10 @@ import { test, expect, Page } from '@playwright/test';
 async function gotoHash(page: Page, hash: string) {
   await page.goto('/');
   await page.evaluate((h) => { location.hash = h; }, `#${hash}`);
-  await page.waitForTimeout(500);
+  // Deterministic wait: every route renders an <h2> inside <main>.
+  await page.waitForFunction(
+    () => (document.querySelector('main h2')?.textContent?.length ?? 0) > 0,
+  );
 }
 
 interface Probe {
