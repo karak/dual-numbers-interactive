@@ -58,10 +58,56 @@
   <script>
     'use strict';
     // === Dual class === (Task 3, 4)
-    // === Self-test === (Task 2)
-    // === UI helpers === (Task 6)
+    // === Self-test ===
+    const __tests = [];
+    function test(name, fn) { __tests.push({ name, fn }); }
+    function runSelfTest(container) {
+      container.replaceChildren(h('h2', {}, 'Self-test'));
+      let pass = 0, fail = 0;
+      for (const t of __tests) {
+        let ok = false, err = null;
+        try { ok = !!t.fn(); } catch (e) { err = e; }
+        container.appendChild(h('div', { class: 'test-row ' + (ok ? 'pass' : 'fail') },
+          (ok ? 'PASS  ' : 'FAIL  ') + t.name + (err ? '  — ' + err.message : '')));
+        ok ? pass++ : fail++;
+      }
+      container.appendChild(h('div', { class: 'test-row ' + (fail === 0 ? 'pass' : 'fail') },
+        `${pass} passed, ${fail} failed`));
+    }
+    const eq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
+
+    test('runner sanity', () => 1 + 1 === 2);
+    // === UI helpers ===
+    function h(tag, attrs = {}, ...children) {
+      const el = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs || {})) {
+        if (v == null || v === false) continue;
+        if (k === 'class') el.className = v;
+        else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+        else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+        else el.setAttribute(k, v);
+      }
+      for (const c of children.flat()) {
+        if (c == null || c === false) continue;
+        el.appendChild(typeof c === 'string' || typeof c === 'number'
+          ? document.createTextNode(String(c)) : c);
+      }
+      return el;
+    }
+    function typeset(container) {
+      if (!window.MathJax || !MathJax.typesetPromise) return;
+      if (MathJax.typesetClear) MathJax.typesetClear([container]);
+      MathJax.typesetPromise([container]);
+    }
     // === Examples === (Tasks 5, 7-11)
-    // === Router === (Task 5)
+    // === Router ===
+    function router() {
+      const main = document.getElementById('main');
+      if (location.hash === '#test') { runSelfTest(main); return; }
+      main.replaceChildren(document.createTextNode('(router not yet implemented)'));
+    }
+    window.addEventListener('hashchange', router);
+    window.addEventListener('DOMContentLoaded', router);
   </script>
 </body>
 </html>
