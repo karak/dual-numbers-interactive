@@ -155,6 +155,14 @@
       const r = Dual.v(2).pow(2).sin();
       return eq(r.re, Math.sin(4)) && eq(r.du, 4 * Math.cos(4));
     });
+    test('plotMap: maps domain mid to canvas mid x', () => {
+      const m = makePlotMap({ xMin: -1, xMax: 1, yMin: -1, yMax: 1, w: 600, h: 360 });
+      return eq(m.toX(0), 300) && eq(m.toY(0), 180);
+    });
+    test('plotMap: yMax → canvas top', () => {
+      const m = makePlotMap({ xMin: 0, xMax: 1, yMin: 0, yMax: 1, w: 100, h: 100 });
+      return eq(m.toY(1), 0);
+    });
     // === UI helpers ===
     function h(tag, attrs = {}, ...children) {
       const el = document.createElement(tag);
@@ -176,6 +184,73 @@
       if (!window.MathJax || !MathJax.typesetPromise) return;
       if (MathJax.typesetClear) MathJax.typesetClear([container]);
       MathJax.typesetPromise([container]);
+    }
+    function makePlotMap({ xMin, xMax, yMin, yMax, w, h }) {
+      return {
+        toX: x => ((x - xMin) / (xMax - xMin)) * w,
+        toY: y => h - ((y - yMin) / (yMax - yMin)) * h,
+        xMin, xMax, yMin, yMax, w, h,
+      };
+    }
+    function setupCanvas(canvas, w, h) {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = w * dpr; canvas.height = h * dpr;
+      canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return ctx;
+    }
+    function drawAxes(ctx, m) {
+      ctx.save();
+      ctx.strokeStyle = '#e8e6e0';
+      ctx.lineWidth = 1;
+      if (m.yMin <= 0 && m.yMax >= 0) {
+        ctx.beginPath(); ctx.moveTo(0, m.toY(0)); ctx.lineTo(m.w, m.toY(0)); ctx.stroke();
+      }
+      if (m.xMin <= 0 && m.xMax >= 0) {
+        ctx.beginPath(); ctx.moveTo(m.toX(0), 0); ctx.lineTo(m.toX(0), m.h); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    function drawCurve(ctx, m, fn, opts = {}) {
+      ctx.save();
+      ctx.strokeStyle = opts.color || '#1a1a1a';
+      ctx.lineWidth = opts.width || 2;
+      ctx.beginPath();
+      let started = false;
+      const N = 600;
+      for (let i = 0; i <= N; i++) {
+        const x = m.xMin + (m.xMax - m.xMin) * (i / N);
+        const y = fn(x);
+        if (!Number.isFinite(y)) { started = false; continue; }
+        const px = m.toX(x), py = m.toY(y);
+        if (!started) { ctx.moveTo(px, py); started = true; }
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+    function drawPoint(ctx, m, x, y, color = '#6b4eff') {
+      ctx.save(); ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(m.toX(x), m.toY(y), 4, 0, 2 * Math.PI); ctx.fill();
+      ctx.restore();
+    }
+    function drawTangent(ctx, m, x0, y0, slope, color = '#6b4eff') {
+      ctx.save();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      const x1 = m.xMin, x2 = m.xMax;
+      ctx.moveTo(m.toX(x1), m.toY(y0 + slope * (x1 - x0)));
+      ctx.lineTo(m.toX(x2), m.toY(y0 + slope * (x2 - x0)));
+      ctx.stroke();
+      ctx.restore();
+    }
+    function renderSteps(container, steps) {
+      container.replaceChildren(...steps.map(s => {
+        const cls = 'step-row' + (s.highlight ? ' highlight' : '') + (s.ghost ? ' ghost' : '');
+        return h('div', { class: cls }, '$$' + s.latex + '$$');
+      }));
+      typeset(container);
     }
     // === Examples ===
     const examples = {};
