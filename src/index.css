@@ -1,2 +1,41 @@
-/* Tailwind v4 + tokens come in Task 3 */
-body { font-family: system-ui, sans-serif; margin: 0; }
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #fafaf7;
+  --color-surface: #ffffff;
+  --color-ink: #1a1a1a;
+  --color-ink-soft: #4a4a4a;
+  --color-border: #e8e6e0;
+  --color-accent: #5538e8;
+  --color-accent-soft: #ede9ff;
+  --color-curve: #1a1a1a;
+  --color-tangent: #6b4eff;
+  --color-ghost: #b8b3a8;
+  --color-warn: #b00020;
+  --radius: 4px;
+  --font-body: 'Noto Serif JP', 'Source Serif Pro', Georgia, serif;
+  --font-ui: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+canvas {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
