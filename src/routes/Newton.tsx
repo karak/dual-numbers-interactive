@@ -1,68 +1,131 @@
 import { useState } from 'react';
-import { StepRow } from '../components/StepRow';
+import { MathJax } from 'better-react-mathjax';
+import { Plot } from '../components/Plot';
 import { Slider } from '../components/Slider';
-import { fmt3 } from '../lib/format';
-import { newtonStep, type NewtonStep as Step } from '../lib/newton';
+import { StepRow } from '../components/StepRow';
+import { Warn } from '../components/Warn';
+import { drawAxes, drawCurve, drawPoint, drawTangent, makePlotMap } from '../lib/plot';
+import { newtonStep } from '../lib/newton';
+
+// v1 source: examples.newton in docs/legacy/index.html
+//   - heading: 'Newton 法'
+//   - description: f(x) = x^3 - 2x - 5 ...
+//   - slider: '初期値 x_0' (-3..3 step 0.01)
+//   - buttons: '1 ステップ' / '5 ステップ' / 'リセット'
+//   - history starts with one row {x: x0, fx: f(x0), dfx: NaN}
+//   - history row format: '\text{step } i:\; x = ...,\; f(x) = ...,\; f'(x) = ...'
+//   - warning when last finite |f'(x)| < 1e-6:
+//     '⚠ f'(x) が 0 に近い：発散の恐れ。初期値を変えてみてください。'
+const polyFn = (x: number): number => x * x * x - 2 * x - 5;
+
+interface HistoryRow {
+  x: number;
+  fx: number;
+  dfx: number; // NaN until a step is taken from this row
+}
+
+const initialHistory = (x0: number): HistoryRow[] => [
+  { x: x0, fx: polyFn(x0), dfx: NaN },
+];
 
 export function Newton() {
   const [x0, setX0] = useState(2);
-  const [steps, setSteps] = useState<Step[]>([]);
+  const [history, setHistory] = useState<HistoryRow[]>(() => initialHistory(2));
 
-  const current = steps.length > 0 ? steps[steps.length - 1].x : x0;
-
-  const advance = () => {
-    setSteps((s) => [...s, newtonStep(s.length === 0 ? x0 : s[s.length - 1].x)]);
+  const doStep = () => {
+    setHistory((h) => {
+      const last = h[h.length - 1];
+      const next = newtonStep(last.x);
+      const updated: HistoryRow[] = h.map((row, i) =>
+        i === h.length - 1 ? { ...row, dfx: next.dfx } : row,
+      );
+      updated.push({ x: next.x, fx: polyFn(next.x), dfx: NaN });
+      return updated;
+    });
   };
-  const reset = () => setSteps([]);
-  const converge = () => {
-    const s: Step[] = [];
-    let xc = x0;
-    for (let i = 0; i < 20; i++) {
-      const step = newtonStep(xc);
-      s.push(step);
-      if (Math.abs(step.fx) < 1e-9) break;
-      xc = step.x;
-    }
-    setSteps(s);
+  const doFive = () => {
+    setHistory((h) => {
+      const out: HistoryRow[] = [...h];
+      for (let i = 0; i < 5; i++) {
+        const last = out[out.length - 1];
+        const next = newtonStep(last.x);
+        out[out.length - 1] = { ...last, dfx: next.dfx };
+        out.push({ x: next.x, fx: polyFn(next.x), dfx: NaN });
+      }
+      return out;
+    });
+  };
+  const reset = () => setHistory(initialHistory(x0));
+
+  const last = history[history.length - 1];
+  const showWarn =
+    last && Number.isFinite(last.dfx) && Math.abs(last.dfx) < 1e-6;
+
+  const draw = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    const m = makePlotMap({ xMin: -3, xMax: 3, yMin: -10, yMax: 10, w, h });
+    drawAxes(ctx, m);
+    drawCurve(ctx, m, polyFn, { color: '#1a1a1a' });
+    history.forEach((row, i) => {
+      ctx.globalAlpha = i === history.length - 1 ? 1 : 0.3;
+      if (Number.isFinite(row.dfx)) drawTangent(ctx, m, row.x, row.fx, row.dfx);
+      drawPoint(ctx, m, row.x, row.fx);
+      ctx.globalAlpha = 1;
+    });
   };
 
   return (
     <article>
       <h2 className="font-[var(--font-ui)] mt-0">Newton 法</h2>
       <p>
-        f(x) = x³ - 2x - 5 の根を Newton 法で求めます。微分は二重数で自動計算。
+        <MathJax inline>{`\\(f(x) = x^3 - 2x - 5\\)`}</MathJax> の根を{' '}
+        <MathJax inline>{`\\(x_{n+1} = x_n - f(x_n)/f'(x_n)\\)`}</MathJax> で求めます。
+        <MathJax inline>{`\\(f'\\)`}</MathJax> は二重数で自動計算。
       </p>
-      <Slider
-        label="x₀"
-        value={x0}
-        min={-3}
-        max={3}
-        step={0.1}
-        onChange={(v) => {
-          setX0(v);
-          setSteps([]);
-        }}
-      />
-      <div className="flex gap-2 mt-3">
-        <button onClick={advance} className="border border-[var(--color-border)] rounded px-3 py-1">
-          次のステップ
-        </button>
-        <button onClick={converge} className="border border-[var(--color-border)] rounded px-3 py-1">
-          収束まで
-        </button>
-        <button onClick={reset} className="border border-[var(--color-border)] rounded px-3 py-1">
-          リセット
-        </button>
-      </div>
-      <div className="mt-4 space-y-1">
-        <StepRow tex={`x_{\\text{current}} = ${fmt3(current)}`} ghost />
-        {steps.map((s, i) => (
-          <div key={i} data-testid="newton-step">
-            <StepRow
-              tex={`x_{${i}} = ${fmt3(s.prev)},\\quad f = ${fmt3(s.fx)},\\quad f' = ${fmt3(s.dfx)},\\quad x_{${i + 1}} = ${fmt3(s.x)}`}
-            />
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_600px] gap-4">
+        <div>
+          <Slider
+            label={<>初期値 <MathJax inline>{`\\(x_0\\)`}</MathJax></>}
+            value={x0}
+            min={-3}
+            max={3}
+            step={0.01}
+            onChange={(v) => {
+              setX0(v);
+              setHistory(initialHistory(v));
+            }}
+          />
+          <div className="flex gap-2 mt-3">
+            <button onClick={doStep} className="border border-[var(--color-border)] rounded px-3 py-1">
+              1 ステップ
+            </button>
+            <button onClick={doFive} className="border border-[var(--color-border)] rounded px-3 py-1">
+              5 ステップ
+            </button>
+            <button onClick={reset} className="border border-[var(--color-border)] rounded px-3 py-1">
+              リセット
+            </button>
           </div>
-        ))}
+          {showWarn && (
+            <Warn>
+              ⚠ <MathJax inline>{`\\(f'(x)\\)`}</MathJax> が 0
+              に近い：発散の恐れ。初期値を変えてみてください。
+            </Warn>
+          )}
+          <div className="mt-4 space-y-1">
+            {history.map((r, i) => {
+              const tail = Number.isFinite(r.dfx)
+                ? `,\\; f'(x) = ${r.dfx.toFixed(6)}`
+                : '';
+              const tex = `\\text{step } ${i}:\\; x = ${r.x.toFixed(6)},\\; f(x) = ${r.fx.toFixed(6)}${tail}`;
+              return (
+                <div key={i} data-testid="newton-step">
+                  <StepRow tex={tex} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <Plot draw={draw} ariaLabel="Newton 法の反復" />
       </div>
     </article>
   );

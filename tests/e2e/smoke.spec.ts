@@ -45,7 +45,7 @@ test('interaction sweep: poly slider, trig select, grad-descent buttons', async 
   await page.locator('main select').first().selectOption('exp');
 
   await gotoHash(page, '/newton');
-  const nextBtn = page.getByRole('button', { name: /次のステップ/ });
+  const nextBtn = page.getByRole('button', { name: '1 ステップ' });
   for (let i = 0; i < 3; i++) await nextBtn.click();
 
   expect(errors, errors.join('\n')).toEqual([]);
@@ -55,7 +55,7 @@ test('divergence warning shows after many steps with η=1.2', async ({ page }) =
   await gotoHash(page, '/grad-descent');
   const etaSlider = page.locator('main input[type=range]').nth(1);
   await etaSlider.fill('1.2');
-  const stepBtn = page.getByRole('button', { name: /次のステップ/ });
+  const stepBtn = page.getByRole('button', { name: '1 ステップ' });
   for (let i = 0; i < 45; i++) await stepBtn.click();
   await expect(page.getByRole('alert')).toContainText('発散');
 });
