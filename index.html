@@ -16,7 +16,7 @@
       --bg: #fafaf7;  --surface: #ffffff;
       --ink: #1a1a1a; --ink-soft: #4a4a4a;
       --border: #e8e6e0;
-      --accent: #6b4eff; --accent-soft: #ede9ff;
+      --accent: #5538e8; --accent-soft: #ede9ff;
       --curve: #1a1a1a; --tangent: #6b4eff; --ghost: #b8b3a8;
       --radius: 4px; --pad: 24px; --gap: 16px;
       --font-body: 'Noto Serif JP', 'Source Serif Pro', Georgia, serif;
@@ -390,6 +390,7 @@
             ),
             h('div', {}, canvas)),
         );
+        typeset(container);
         const ctx = setupCanvas(canvas, 600, 360);
         const m = makePlotMap({ xMin: -3, xMax: 3, yMin: -10, yMax: 10, w: 600, h: 360 });
         const update = () => {
@@ -470,6 +471,7 @@
                 h('label', {}, 'Taylor 次数: ', termsVal), ' ', addBtn, ' ', resetBtn)),
             h('div', {}, canvas)),
         );
+        typeset(container);
         const ctx = setupCanvas(canvas, 600, 360);
         const update = () => {
           const fnDef = examples.trig.funcs[state.fn];
@@ -557,6 +559,7 @@
               x.container),
             h('div', {}, canvas)),
         );
+        typeset(container);
         const ctx = setupCanvas(canvas, 600, 360);
         const update = () => {
           const r = examples.chain.compute(state);
