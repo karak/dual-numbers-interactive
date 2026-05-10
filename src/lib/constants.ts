@@ -9,12 +9,4 @@ export const ROUTES = [
 
 export type RoutePath = (typeof ROUTES)[number]['path'];
 
-export const COLORS = {
-  curve:   'var(--color-curve)',
-  tangent: 'var(--color-tangent)',
-  border:  'var(--color-border)',
-  accent:  'var(--color-accent)',
-  ghost:   'var(--color-ghost)',
-} as const;
-
 export const EPS = 1e-9;

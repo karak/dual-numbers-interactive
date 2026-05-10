@@ -6,6 +6,7 @@ import { StepRow } from '../components/StepRow';
 import { Warn } from '../components/Warn';
 import { drawAxes, drawCurve, drawPoint, makePlotMap } from '../lib/plot';
 import { gradStep } from '../lib/grad';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 // v1 source: examples.gradDescent in docs/legacy/index.html
 //   - heading: '勾配降下'
@@ -57,12 +58,14 @@ export function GradDescent() {
   const recent = history.slice(-8);
   const offset = history.length - recent.length;
 
+  const colors = useThemeColors();
+
   const draw = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
     const m = makePlotMap({ xMin: -5, xMax: 9, yMin: 0, yMax: 50, w, h });
-    drawAxes(ctx, m);
-    drawCurve(ctx, m, fnGD, { color: '#1a1a1a' });
+    drawAxes(ctx, m, colors.border);
+    drawCurve(ctx, m, fnGD, { color: colors.curve });
     ctx.save();
-    ctx.strokeStyle = '#6b4eff';
+    ctx.strokeStyle = colors.tangent;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     history.forEach((p, i) => {
@@ -73,7 +76,7 @@ export function GradDescent() {
     });
     ctx.stroke();
     ctx.restore();
-    history.forEach((p) => drawPoint(ctx, m, p.x, p.fx));
+    history.forEach((p) => drawPoint(ctx, m, p.x, p.fx, colors.tangent));
   };
 
   return (

@@ -6,6 +6,7 @@ import { StepRow } from '../components/StepRow';
 import { drawAxes, drawCurve, drawPoint, drawTangent, makePlotMap } from '../lib/plot';
 import { fmt3 } from '../lib/format';
 import { polyCompute, polyF, polySteps } from '../lib/poly';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 // v1 source: examples.poly in docs/legacy/index.html
 //   - heading: '多項式の自動微分'
@@ -16,16 +17,14 @@ export function Polynomial() {
   const [x, setX] = useState(1);
   const { value, derivative } = polyCompute(x);
   const steps = polySteps(x);
+  const colors = useThemeColors();
 
   const draw = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
-    const cs = getComputedStyle(document.documentElement);
-    const border = cs.getPropertyValue('--color-border').trim() || '#e8e6e0';
-    const curve = cs.getPropertyValue('--color-curve').trim() || '#1a1a1a';
     const m = makePlotMap({ xMin: -3, xMax: 3, yMin: -10, yMax: 10, w, h });
-    drawAxes(ctx, m, border);
-    drawCurve(ctx, m, polyF, { color: curve });
-    drawTangent(ctx, m, x, value, derivative);
-    drawPoint(ctx, m, x, value);
+    drawAxes(ctx, m, colors.border);
+    drawCurve(ctx, m, polyF, { color: colors.curve });
+    drawTangent(ctx, m, x, value, derivative, colors.tangent);
+    drawPoint(ctx, m, x, value, colors.tangent);
   };
 
   return (

@@ -5,6 +5,7 @@ import { Slider } from '../components/Slider';
 import { StepRow } from '../components/StepRow';
 import { drawAxes, drawCurve, drawPoint, drawTangent, makePlotMap } from '../lib/plot';
 import { chainCompute, chainFn, chainSteps, type Inner, type Outer } from '../lib/chain';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 // v1 source: examples.chain in docs/legacy/index.html
 //   - heading: '連鎖律'
@@ -21,14 +22,15 @@ export function Chain() {
   const r = chainCompute(x, inner, outer);
   const steps = chainSteps(x, inner, outer);
   const fn = chainFn(inner, outer);
+  const colors = useThemeColors();
 
   const draw = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
     const yRange: [number, number] = outer === 'exp' ? [-1, 20] : [-2, 2];
     const m = makePlotMap({ xMin: -2, xMax: 2, yMin: yRange[0], yMax: yRange[1], w, h });
-    drawAxes(ctx, m);
-    drawCurve(ctx, m, fn, { color: '#1a1a1a' });
-    drawTangent(ctx, m, x, r.value, r.derivative);
-    drawPoint(ctx, m, x, r.value);
+    drawAxes(ctx, m, colors.border);
+    drawCurve(ctx, m, fn, { color: colors.curve });
+    drawTangent(ctx, m, x, r.value, r.derivative, colors.tangent);
+    drawPoint(ctx, m, x, r.value, colors.tangent);
   };
 
   return (

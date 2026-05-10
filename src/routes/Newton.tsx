@@ -6,6 +6,7 @@ import { StepRow } from '../components/StepRow';
 import { Warn } from '../components/Warn';
 import { drawAxes, drawCurve, drawPoint, drawTangent, makePlotMap } from '../lib/plot';
 import { isNewWarningTriggered, newtonStep } from '../lib/newton';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 // v1 source: examples.newton in docs/legacy/index.html
 //   - heading: 'Newton 法'
@@ -69,15 +70,16 @@ export function Newton({ initialHistory: seed }: NewtonProps = {}) {
   // Deviation from v1: scan history for the most recent finite dfx instead
   // of trusting the just-pushed (NaN-dfx) row. See `isNewWarningTriggered`.
   const showWarn = isNewWarningTriggered(history);
+  const colors = useThemeColors();
 
   const draw = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
     const m = makePlotMap({ xMin: -3, xMax: 3, yMin: -10, yMax: 10, w, h });
-    drawAxes(ctx, m);
-    drawCurve(ctx, m, polyFn, { color: '#1a1a1a' });
+    drawAxes(ctx, m, colors.border);
+    drawCurve(ctx, m, polyFn, { color: colors.curve });
     history.forEach((row, i) => {
       ctx.globalAlpha = i === history.length - 1 ? 1 : 0.3;
-      if (Number.isFinite(row.dfx)) drawTangent(ctx, m, row.x, row.fx, row.dfx);
-      drawPoint(ctx, m, row.x, row.fx);
+      if (Number.isFinite(row.dfx)) drawTangent(ctx, m, row.x, row.fx, row.dfx, colors.tangent);
+      drawPoint(ctx, m, row.x, row.fx, colors.tangent);
       ctx.globalAlpha = 1;
     });
   };

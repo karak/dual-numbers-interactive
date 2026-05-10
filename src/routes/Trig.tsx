@@ -5,6 +5,7 @@ import { Slider } from '../components/Slider';
 import { StepRow } from '../components/StepRow';
 import { drawAxes, drawCurve, drawPoint, makePlotMap } from '../lib/plot';
 import { taylorSteps, taylorSumAround, trigCompute, trueValue, type TrigFn } from '../lib/taylor';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 // v1 source: examples.trig in docs/legacy/index.html
 //   - heading: 'sin / cos / exp と Taylor 展開'
@@ -20,14 +21,15 @@ export function Trig() {
 
   const { value, derivative } = trigCompute(fn, x);
   const steps = taylorSteps(fn, x);
+  const colors = useThemeColors();
 
   const draw = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
     const yRange: [number, number] = fn === 'exp' ? [-1, 20] : [-2, 2];
     const m = makePlotMap({ xMin: -3, xMax: 3, yMin: yRange[0], yMax: yRange[1], w, h });
-    drawAxes(ctx, m);
-    drawCurve(ctx, m, (xx) => trueValue(fn, xx), { color: '#1a1a1a' });
-    drawCurve(ctx, m, taylorSumAround(fn, x, terms), { color: '#6b4eff', width: 1.5 });
-    drawPoint(ctx, m, x, value);
+    drawAxes(ctx, m, colors.border);
+    drawCurve(ctx, m, (xx) => trueValue(fn, xx), { color: colors.curve });
+    drawCurve(ctx, m, taylorSumAround(fn, x, terms), { color: colors.tangent, width: 1.5 });
+    drawPoint(ctx, m, x, value, colors.tangent);
   };
 
   return (
