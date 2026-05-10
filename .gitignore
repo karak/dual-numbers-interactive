@@ -17,6 +17,7 @@ build/
 .next/
 .vite/
 .cache/
+*.tsbuildinfo
 
 # Test / coverage
 coverage/
