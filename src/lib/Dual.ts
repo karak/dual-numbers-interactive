@@ -33,4 +33,24 @@ export class Dual {
   neg(): Dual {
     return new Dual(-this.re, -this.du);
   }
+  sin(): Dual {
+    return new Dual(Math.sin(this.re), Math.cos(this.re) * this.du);
+  }
+  cos(): Dual {
+    return new Dual(Math.cos(this.re), -Math.sin(this.re) * this.du);
+  }
+  exp(): Dual {
+    const e = Math.exp(this.re);
+    return new Dual(e, e * this.du);
+  }
+  log(): Dual {
+    return new Dual(Math.log(this.re), this.du / this.re);
+  }
+  pow(n: number): Dual {
+    const r = Math.pow(this.re, n);
+    if (this.re === 0 && n < 1) {
+      return new Dual(r, this.du === 0 ? 0 : NaN);
+    }
+    return new Dual(r, n * Math.pow(this.re, n - 1) * this.du);
+  }
 }

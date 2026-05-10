@@ -41,3 +41,40 @@ describe('Dual arithmetic', () => {
     expect(eq(r.re, -3) && eq(r.du, -1)).toBe(true);
   });
 });
+
+describe('Dual transcendentals', () => {
+  it('sin: d/dx sin(x) at x=0 is cos(0)=1', () => {
+    const r = Dual.v(0).sin();
+    expect(eq(r.re, 0) && eq(r.du, 1)).toBe(true);
+  });
+  it('cos: d/dx cos(x) at x=π/2 is -1', () => {
+    const r = Dual.v(Math.PI / 2).cos();
+    expect(eq(r.re, 0) && eq(r.du, -1)).toBe(true);
+  });
+  it('exp: d/dx e^x at x=1 is e', () => {
+    const r = Dual.v(1).exp();
+    expect(eq(r.re, Math.E) && eq(r.du, Math.E)).toBe(true);
+  });
+  it('log: d/dx ln(x) at x=2 is 1/2', () => {
+    const r = Dual.v(2).log();
+    expect(eq(r.re, Math.log(2)) && eq(r.du, 0.5)).toBe(true);
+  });
+  it('pow: d/dx x^3 at x=2 is 12', () => {
+    const r = Dual.v(2).pow(3);
+    expect(eq(r.re, 8) && eq(r.du, 12)).toBe(true);
+  });
+  it('chain via composition: d/dx sin(x^2) at x=2 = 4 cos(4)', () => {
+    const r = Dual.v(2).pow(2).sin();
+    expect(eq(r.re, Math.sin(4)) && eq(r.du, 4 * Math.cos(4))).toBe(true);
+  });
+  it('pow guard: pow(0, n<1) returns NaN derivative when du≠0', () => {
+    const r = Dual.v(0).pow(0.5);
+    expect(r.re).toBe(0);
+    expect(Number.isNaN(r.du)).toBe(true);
+  });
+  it('pow guard: pow(0, n<1) returns 0 derivative when du=0', () => {
+    const r = Dual.c(0).pow(0.5);
+    expect(r.re).toBe(0);
+    expect(r.du).toBe(0);
+  });
+});
