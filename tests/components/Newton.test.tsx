@@ -75,26 +75,19 @@ describe('Newton route', () => {
     expect(screen.getAllByRole('slider')).toHaveLength(1);
   });
 
-  it('renders the v1 verbatim warning when seeded history has near-zero last dfx', () => {
-    // Seed a history whose final-finite dfx is near 0 — the only deterministic
-    // way to trigger the warn (Newton on x^3-2x-5 from -3..3 never produces
-    // |f'|<1e-6).
-    render(
-      <MathJaxContext version={3}>
-        <MemoryRouter>
-          <Newton
-            initialHistory={[
-              { x: 0.815, fx: -6.46, dfx: 1e-9 },
-              { x: 0.815, fx: -6.46, dfx: NaN },
-            ]}
-          />
-        </MemoryRouter>
-      </MathJaxContext>,
-    );
-    // v1 (docs/legacy/index.html:L603) uses <div class="warn">, not role=alert.
-    const warn = document.querySelector('.warn')!;
+  // Note: a previous v2-only test seeded `initialHistory=[{dfx:1e-9},{dfx:NaN}]`
+  // to "trigger the warn", relying on v2's deviation that scanned history for
+  // the most recent finite dfx. v1 (docs/legacy/index.html:L637-638) only
+  // reads the last row's dfx, which is NaN in normal flow, making the warn
+  // dead code in v1. Per the v1-source-of-truth rule, the deviation was
+  // reverted (C2 in plans/rustling-swinging-crescent.md) and this seeded
+  // assertion was removed because it exercised behaviour v1 cannot produce.
+  // The warn DOM ALWAYS renders (`<div class="warn"></div>`) — the textContent
+  // toggle is covered by isNewWarningTriggered unit tests.
+  it('always renders <div class="warn"></div> (textContent toggled, never removed)', () => {
+    renderNewton();
+    const warn = document.querySelector('.warn');
     expect(warn).not.toBeNull();
-    expect(warn.textContent).toContain("f'(x) が 0 に近い：発散の恐れ。初期値を変えてみてください。");
-    expect(warn.textContent).toContain('⚠');
+    expect(warn?.textContent).toBe(''); // normal initial state: empty
   });
 });
