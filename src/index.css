@@ -59,6 +59,16 @@ canvas {
   border: 1px solid var(--color-border);
 }
 
+/* Restore v1-equivalent button font-size.  v1 has no explicit button
+   font-size rule, so buttons inherit the user-agent default (~13.3333px
+   in Chromium).  Tailwind preflight zeroes `font: inherit` on buttons
+   which collapses them to the 16px body size and causes '1 ステップ' to
+   wrap on two lines.  Restoring the UA value keeps button labels on one
+   line and matches v1's tighter visual rhythm. */
+main button {
+  font-size: 13.3333px;
+}
+
 /* Restore v1-equivalent paragraph spacing. Tailwind preflight zeroes
    <p> margin; v1 inherited browser default (~16px top/bottom). */
 main p {
@@ -67,3 +77,23 @@ main p {
 }
 main p:first-child { margin-top: 0; }
 main p:last-child { margin-bottom: 0; }
+
+/* Restore v1-equivalent heading sizes/weights/margins.
+   v1 uses no explicit rules for h2/h3 inside <main>, so they inherit
+   the browser-default UA stylesheet (Chromium: h2 = 1.5em bold, h3 =
+   1.17em bold, ~0.83em/1em vertical margins).  Tailwind preflight resets
+   all headings to `font-size: inherit; font-weight: inherit; margin: 0`,
+   which made v2 headings render at body-size and look like plain prose.
+   Restoring the UA values here keeps the visual hierarchy faithful to v1. */
+main h2 {
+  font-size: 1.5em;
+  font-weight: 700;
+  margin-top: 0.83em;
+  margin-bottom: 0.83em;
+}
+main h3 {
+  font-size: 1.17em;
+  font-weight: 700;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
