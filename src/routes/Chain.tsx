@@ -44,7 +44,6 @@ export function Chain() {
               id={innerId}
               value={inner}
               onChange={(e) => setInner(e.target.value as Inner)}
-              className="border border-[var(--color-border)] rounded p-1"
             >
               <option value="sq">x²</option>
               <option value="cube">x³</option>
@@ -55,7 +54,6 @@ export function Chain() {
               id={outerId}
               value={outer}
               onChange={(e) => setOuter(e.target.value as Outer)}
-              className="border border-[var(--color-border)] rounded p-1"
             >
               <option value="sin">sin u</option>
               <option value="cos">cos u</option>

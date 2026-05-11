@@ -46,7 +46,7 @@ export function Trig() {
                 setFn(e.target.value as TrigFn);
                 setTerms(1);
               }}
-              className="ml-2 border border-[var(--color-border)] rounded p-1"
+              className="ml-2"
             >
               <option value="sin">sin x</option>
               <option value="cos">cos x</option>

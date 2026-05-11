@@ -99,6 +99,18 @@ main h3 {
   margin-bottom: 1em;
 }
 
+/* v1 has no CSS for <select>; it relies on Chrome UA defaults (font ~13.3px,
+   1px border).  Tailwind v4 preflight forces `font: inherit; border: 0;`
+   on form elements, which would render the trig/chain selects oversized
+   (16px text, no border) and break the layout fidelity.  `revert` returns
+   each property to the UA stylesheet value so we render exactly what v1
+   does without depending on Chrome's specific magic constants. */
+main select {
+  font: revert;
+  border: revert;
+  padding: revert;
+}
+
 /* v1-faithful step-row styling (mirrors docs/legacy/index.html lines 47-50) */
 .step-row { padding: 4px 0; }
 .step-row-highlight {

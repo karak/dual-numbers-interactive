@@ -829,6 +829,39 @@ test.describe('v1 -> v2 style audit', () => {
     expectClose(parseFloat(a), 16, 'v1 baseline poly p margin-top is 16px');
   });
 
+  test('main select keeps Chrome UA defaults (font-size, padding, border)', async ({
+    page,
+    browser,
+  }) => {
+    // v1 has no CSS for <select>; the trig/chain selects render with
+    // Chrome UA defaults: ~13.33px font, 0 padding, 1px border. Tailwind
+    // preflight forces `font: inherit; border: 0;` on form controls — left
+    // unchecked, that turns selects into 16px borderless boxes (~31px tall)
+    // and shoves layout around.  We assert against the trig sin/cos select.
+    const { v1: a, v2: b } = await pairSnapshot(
+      browser,
+      page,
+      '#/trig',
+      'main select',
+      'main select',
+      ['font-size', 'padding-top', 'padding-bottom', 'border-top-width'],
+    );
+
+    expectClose(parseFloat(b['font-size']), parseFloat(a['font-size']), 'select font-size');
+    expectClose(parseFloat(b['padding-top']), parseFloat(a['padding-top']), 'select padding-top');
+    expectClose(
+      parseFloat(b['padding-bottom']),
+      parseFloat(a['padding-bottom']),
+      'select padding-bottom',
+    );
+    expectClose(
+      parseFloat(b['border-top-width']),
+      parseFloat(a['border-top-width']),
+      'select border-top-width',
+      1,
+    );
+  });
+
   test('header h1 line-height matches v1 header text line-height', async ({ page, browser }) => {
     // v1 has plain text inside <header>; v2 wraps it in <h1>. Tailwind's
     // `text-base` sets line-height: 1.5rem (24px), but v1's text inherits
