@@ -59,14 +59,17 @@ canvas {
   border: 1px solid var(--color-border);
 }
 
-/* Restore v1-equivalent button font-size.  v1 has no explicit button
-   font-size rule, so buttons inherit the user-agent default (~13.3333px
-   in Chromium).  Tailwind preflight zeroes `font: inherit` on buttons
-   which collapses them to the 16px body size and causes '1 ステップ' to
-   wrap on two lines.  Restoring the UA value keeps button labels on one
-   line and matches v1's tighter visual rhythm. */
+/* Restore v1-equivalent button font metrics.  v1 has no explicit
+   `font-size` or `line-height` rule on buttons, so they pick up the
+   Chrome UA stylesheet defaults: ~13.3333px font and `line-height: normal`
+   (≈1.2 × font-size).  Tailwind preflight forces `font: inherit;` on
+   buttons, which collapses them to the 16px body size and 1.6 body
+   line-height, causing '1 ステップ' to wrap on two lines and inflating
+   button height by ~7px.  Restoring both UA values keeps labels on a
+   single line at v1's compact rhythm. */
 main button {
   font-size: 13.3333px;
+  line-height: normal;
 }
 
 /* Restore v1-equivalent paragraph spacing. Tailwind preflight zeroes
