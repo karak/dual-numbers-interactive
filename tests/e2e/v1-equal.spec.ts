@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { styleAttrEqual } from './_style-normalize';
 
 /*
  * Step 5 of the v1-faithful rewrite plan
@@ -141,7 +142,9 @@ function diffSnap(v1: Snap, v2: Snap): string[] {
     if (!(k in v1.style)) diffs.push(`${v1.path} > css.${k}: missing in v1, v2='${v2.style[k]}'`);
   }
   // Attributes: presence must match; values must match except for known
-  // framework-generated identifiers.
+  // framework-generated identifiers. `style` is compared semantically (via
+  // styleAttrEqual) so cosmetic differences in whitespace / trailing
+  // semicolons / declaration order are not flagged — see I4.
   for (const k of Object.keys(v1.attrs)) {
     const inV2 = k in v2.attrs;
     if (!inV2) {
@@ -149,6 +152,12 @@ function diffSnap(v1: Snap, v2: Snap): string[] {
       continue;
     }
     if (IGNORE_ATTR_VALUES.has(k)) continue;
+    if (k === 'style') {
+      if (!styleAttrEqual(v1.attrs[k], v2.attrs[k])) {
+        diffs.push(`${v1.path} > attr.style (normalized): v1='${v1.attrs[k]}' v2='${v2.attrs[k]}'`);
+      }
+      continue;
+    }
     if (v2.attrs[k] !== v1.attrs[k]) {
       diffs.push(`${v1.path} > attr.${k}: v1='${v1.attrs[k]}' v2='${v2.attrs[k]}'`);
     }
