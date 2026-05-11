@@ -18,6 +18,25 @@
   --font-mono: 'JetBrains Mono', Menlo, monospace;
 }
 
+/* v1-compatible token names exposed at :root for plot.ts, useThemeColors,
+   and any v1-faithful test or future contributor reading the legacy file.
+   Tailwind v4 @theme registers --color-* on :root automatically; these
+   bare-name aliases mirror v1's :root declaration verbatim so
+   `getPropertyValue('--bg')` returns the literal hex (not a var() ref). */
+:root {
+  --bg: #fafaf7;
+  --surface: #ffffff;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --border: #e8e6e0;
+  --accent: #5538e8;
+  --accent-soft: #ede9ff;
+  --curve: #1a1a1a;
+  --tangent: #6b4eff;
+  --ghost: #b8b3a8;
+  --warn: #b00020;
+}
+
 * { box-sizing: border-box; }
 
 html, body {
