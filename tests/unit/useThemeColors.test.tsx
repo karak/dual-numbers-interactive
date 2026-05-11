@@ -1,37 +1,52 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useThemeColors, type ThemeColors } from '../../src/hooks/useThemeColors';
+import { useThemeColors } from '../../src/hooks/useThemeColors';
 
-// Smoke test: jsdom does not parse Tailwind/CSS so the hook will hit the
-// fallback path. We verify that all keys are non-empty strings — the
-// production code path (with --color-* set) is exercised by route component
-// tests and e2e via the actual stylesheet.
+// v1 source: docs/legacy/index.html:L233-243 (the COLORS reader).
+//
+//   const COLORS = (() => {
+//     const fallback = { curve: '#1a1a1a', tangent: '#6b4eff', border: '#e8e6e0' };
+//     ...
+//     return {
+//       curve:   get('--curve',   fallback.curve),
+//       tangent: get('--tangent', fallback.tangent),
+//       border:  get('--border',  fallback.border),
+//     };
+//   })();
+//
+// v1's COLORS object has exactly three keys. Subagent review I1 found that
+// v2 was returning eleven keys, of which eight were never read by any
+// consumer (verified via grep across src/routes/*.tsx — only `border`,
+// `curve`, `tangent` are accessed). The extra keys are dead code that
+// drift v2 away from v1's surface area, and `--warn` is not even a v1 CSS
+// variable.
 describe('useThemeColors', () => {
-  it('returns non-empty strings for every theme key', () => {
+  it('exposes exactly the v1 key set: border / curve / tangent', () => {
     const { result } = renderHook(() => useThemeColors());
-    const keys: (keyof ThemeColors)[] = [
-      'bg', 'surface', 'ink', 'inkSoft', 'border', 'accent', 'accentSoft',
-      'curve', 'tangent', 'ghost', 'warn',
-    ];
-    for (const k of keys) {
+    expect(Object.keys(result.current).sort()).toEqual(['border', 'curve', 'tangent']);
+  });
+
+  it('returns non-empty string values for each v1 key', () => {
+    const { result } = renderHook(() => useThemeColors());
+    for (const k of ['border', 'curve', 'tangent'] as const) {
       expect(typeof result.current[k]).toBe('string');
       expect(result.current[k].length).toBeGreaterThan(0);
     }
   });
 
-  // v1 ground truth: docs/legacy/index.html:L15-25 declares bare-name CSS vars
-  // (--curve, --tangent, ...). useThemeColors reads the same names verbatim
-  // after Step 0 (verbatim CSS port), so the test sets v1's names.
   it('respects v1 bare-name CSS vars when set on documentElement', () => {
     document.documentElement.style.setProperty('--curve', '#123456');
     document.documentElement.style.setProperty('--tangent', '#abcdef');
+    document.documentElement.style.setProperty('--border', '#fedcba');
     try {
       const { result } = renderHook(() => useThemeColors());
       expect(result.current.curve).toBe('#123456');
       expect(result.current.tangent).toBe('#abcdef');
+      expect(result.current.border).toBe('#fedcba');
     } finally {
       document.documentElement.style.removeProperty('--curve');
       document.documentElement.style.removeProperty('--tangent');
+      document.documentElement.style.removeProperty('--border');
     }
   });
 });
