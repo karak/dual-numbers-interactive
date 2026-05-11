@@ -71,6 +71,25 @@ describe('GradDescent route', () => {
   // Divergence-disable tests removed: v1 (docs/legacy/index.html:L724-728)
   // keeps stepping past divergence and only toggles the warn textContent.
   // The v2-only `disabled` prop was dropped during the v1-faithful rewrite.
+  //
+  // Subagent review I5 (.claude/plans/rustling-swinging-crescent.md): a
+  // future re-introduction of `disabled={diverged}` would silently pass
+  // component tests without this negative assertion.
+  it('step buttons never carry a disabled attribute (v1 fidelity, L724-728)', () => {
+    renderGD();
+    for (const btn of screen.getAllByRole('button')) {
+      expect(btn).not.toHaveAttribute('disabled');
+    }
+    // After divergence, still no disabled attribute.
+    const sliders = screen.getAllByRole('slider') as HTMLInputElement[];
+    const etaSlider = sliders[1];
+    fireEvent.change(etaSlider, { target: { value: '1.2' } });
+    const stepBtn = screen.getByRole('button', { name: '1 ステップ' });
+    for (let i = 0; i < 40; i++) fireEvent.click(stepBtn);
+    for (const btn of screen.getAllByRole('button')) {
+      expect(btn).not.toHaveAttribute('disabled');
+    }
+  });
 
   it('"10 ステップ" button appends 10 rows; only last 8 are rendered (v1 fidelity)', () => {
     renderGD();

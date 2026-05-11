@@ -90,4 +90,17 @@ describe('Newton route', () => {
     expect(warn).not.toBeNull();
     expect(warn?.textContent).toBe(''); // normal initial state: empty
   });
+
+  // Subagent review I5 (.claude/plans/rustling-swinging-crescent.md): the
+  // previous v2 added `disabled={diverged}` to step buttons; v1
+  // (docs/legacy/index.html:L640-657) keeps stepping past divergence and
+  // never disables. The disabled prop was removed in Step 3 of the
+  // v1-faithful rewrite, but no negative assertion existed — a future
+  // re-introduction would silently pass component tests.
+  it('step buttons never carry a disabled attribute (v1 fidelity, L640-657)', () => {
+    renderNewton();
+    for (const btn of screen.getAllByRole('button')) {
+      expect(btn).not.toHaveAttribute('disabled');
+    }
+  });
 });
