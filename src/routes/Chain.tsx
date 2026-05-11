@@ -38,10 +38,8 @@ export function Chain() {
       <h2 className="mt-0">連鎖律</h2>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_600px] gap-4 mt-2">
         <div>
-          <div className="mb-3 [font-family:var(--font-ui)] text-sm">
-            <label htmlFor={innerId}>
-              内側 <MathJax inline>{`\\(g(x)\\)`}</MathJax>:{' '}
-            </label>
+          <div className="mb-3 text-sm">
+            <label htmlFor={innerId}>内側 g(x): </label>
             <select
               id={innerId}
               value={inner}
@@ -52,9 +50,7 @@ export function Chain() {
               <option value="cube">x³</option>
               <option value="twox">2x</option>
             </select>{' '}
-            <label htmlFor={outerId} className="ml-3">
-              外側 <MathJax inline>{`\\(f(u)\\)`}</MathJax>:{' '}
-            </label>
+            <label htmlFor={outerId} className="ml-3">外側 f(u): </label>
             <select
               id={outerId}
               value={outer}

@@ -754,4 +754,29 @@ test.describe('v1 -> v2 style audit', () => {
     expectClose(parseFloat(b.paddingBottom), parseFloat(a.paddingBottom), 'header padding-bottom');
     expectClose(parseFloat(b.paddingLeft), parseFloat(a.paddingLeft), 'header padding-left');
   });
+
+  // Regression guard: v1 main-area labels (slider labels, select labels) have
+  // no font-family override, so they inherit body's `var(--font-body)` which
+  // is serif. A common v2 mistake is to slap `[font-family:var(--font-ui)]`
+  // on the wrapper div / <label> for a "UI feel", which silently turns the
+  // Japanese label text sans-serif. This test bucket-compares both sides.
+  test('main label font-family inherits body serif (slider + select labels)', async ({
+    page,
+    browser,
+  }) => {
+    // grad-descent exposes both slider labels ("初期値 x_0", "学習率 η") and
+    // is therefore the easiest single route to audit. We pick the first
+    // <label> inside <main> — both v1 and v2 render it as the x_0 slider.
+    const { v1: a, v2: b } = await pairSnapshot(
+      browser,
+      page,
+      '#/grad-descent',
+      'main label',
+      'main label',
+      ['font-family'],
+    );
+
+    expect(familyBucket(a['font-family']), `v1 label font="${a['font-family']}"`).toBe('serif');
+    expect(familyBucket(b['font-family']), `v2 label font="${b['font-family']}"`).toBe('serif');
+  });
 });
