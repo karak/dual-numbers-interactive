@@ -1,19 +1,27 @@
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 
+/*
+ * Mirrors docs/legacy/index.html:L52-57 verbatim:
+ *
+ *   <header class="app-header">Dual Numbers — Interactive</header>
+ *   <div class="layout">
+ *     <aside class="sidebar" id="sidebar" role="navigation" aria-label="例題メニュー"></aside>
+ *     <main class="main" id="main" role="main" aria-live="polite"></main>
+ *   </div>
+ *
+ * The id attributes are kept even though React Router (not vanilla JS) drives
+ * routing now — v1's <body> serialised this way and the v1↔v2 equality test
+ * compares outerHTML, so attribute parity matters even where the v2 runtime
+ * doesn't read them.
+ */
 export function Layout() {
   return (
     <>
-      <header className="border-b border-[var(--color-border)] px-6 py-4 [font-family:var(--font-ui)] font-semibold">
-        <h1 className="m-0 text-base font-semibold leading-[1.6]">Dual Numbers — Interactive</h1>
-      </header>
-      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 p-4 max-w-[1200px] mx-auto">
+      <header className="app-header">Dual Numbers — Interactive</header>
+      <div className="layout">
         <Sidebar />
-        <main
-          className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded p-6 min-h-[480px]"
-          role="main"
-          aria-live="polite"
-        >
+        <main className="main" id="main" role="main" aria-live="polite">
           <Outlet />
         </main>
       </div>
