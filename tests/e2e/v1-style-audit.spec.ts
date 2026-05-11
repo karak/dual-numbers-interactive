@@ -493,6 +493,8 @@ test.describe('v1 -> v2 style audit', () => {
           paddingRight: cs.paddingRight,
           paddingBottom: cs.paddingBottom,
           paddingLeft: cs.paddingLeft,
+          lineHeight: cs.lineHeight,
+          height: el.getBoundingClientRect().height,
           textDecoration: cs.textDecorationLine,
         };
       });
@@ -511,6 +513,8 @@ test.describe('v1 -> v2 style audit', () => {
           paddingRight: cs.paddingRight,
           paddingBottom: cs.paddingBottom,
           paddingLeft: cs.paddingLeft,
+          lineHeight: cs.lineHeight,
+          height: el.getBoundingClientRect().height,
           textDecoration: cs.textDecorationLine,
         };
       });
@@ -528,6 +532,11 @@ test.describe('v1 -> v2 style audit', () => {
       parseFloat(a.paddingRight),
       'sidebar link padding-right',
     );
+    // v1 sidebar inherits body line-height 1.6 → 22.4px at 14px. Tailwind's
+    // default `text-sm` sets line-height: 1.25rem (20px), shrinking each
+    // sidebar item by ~2.4px — compounds to a visible vertical-rhythm shift.
+    expectClose(parseFloat(b.lineHeight), parseFloat(a.lineHeight), 'sidebar link line-height');
+    expectClose(b.height, a.height, 'sidebar link height');
     expect(b.textDecoration, 'sidebar link text-decoration').toBe(a.textDecoration);
   });
 
