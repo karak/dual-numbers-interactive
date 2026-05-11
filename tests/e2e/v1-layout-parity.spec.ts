@@ -43,6 +43,7 @@ const SELECTORS = [
 interface ElementSnap {
   t: number; l: number; w: number; h: number;
   fs: string; lh: string; mt: string; mb: string;
+  color: string; bg: string;
 }
 
 async function snapRoute(page: import('@playwright/test').Page) {
@@ -62,6 +63,8 @@ async function snapRoute(page: import('@playwright/test').Page) {
           lh: cs.lineHeight,
           mt: cs.marginTop,
           mb: cs.marginBottom,
+          color: cs.color,
+          bg: cs.backgroundColor,
         };
       });
     }
@@ -112,6 +115,17 @@ for (const route of ROUTES) {
             Math.abs(ai[k] - bi[k]) <= tol,
             `${route} ${sel}[${i}].${k}: v1=${ai[k]} v2=${bi[k]} (tol ±${tol})`,
           ).toBe(true);
+        }
+        // Foreground / background must match exactly. v1 and v2 both
+        // resolve to rgb(...) strings, and a difference here usually means
+        // Tailwind preflight stripped a Chrome UA default that v1 relied on
+        // (e.g. button bg: #fff → transparent).
+        const colorKeys = ['color', 'bg'] as const;
+        for (const k of colorKeys) {
+          expect(
+            bi[k],
+            `${route} ${sel}[${i}].${k}: v1=${ai[k]} v2=${bi[k]}`,
+          ).toBe(ai[k]);
         }
         const cssKeys = ['fs', 'lh', 'mt', 'mb'] as const;
         for (const k of cssKeys) {

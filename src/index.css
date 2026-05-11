@@ -103,24 +103,42 @@ main h3 {
 }
 
 /* v1 has no CSS for <select>; it relies on Chrome UA defaults (font ~13.3px,
-   1px border).  Tailwind v4 preflight forces `font: inherit; border: 0;`
-   on form elements, which would render the trig/chain selects oversized
-   (16px text, no border) and break the layout fidelity.  `revert` returns
-   each property to the UA stylesheet value so we render exactly what v1
-   does without depending on Chrome's specific magic constants. */
+   1px border, black text on white background).  Tailwind v4 preflight
+   forces `font: inherit; border: 0; color: inherit; background-color:
+   transparent` on form elements, which would render the trig/chain selects
+   oversized (16px text, no border) with serif body color on a transparent
+   background.  `revert` returns each property to the UA stylesheet value so
+   we render exactly what v1 does without depending on Chrome's specific
+   magic constants. */
 main select {
   font: revert;
   border: revert;
   padding: revert;
+  color: revert;
+  background-color: revert;
 }
 
 /* Same story for <input type=range> — v1 has only `input[type="range"] {
    width: 100% }` and otherwise leaves UA defaults (~13.3px font, 2px
-   margin). Tailwind preflight zeroes those out, which doesn't change
-   the slider visuals much but trips byte-level audits. */
+   margin, rgb(16,16,16) text on white).  Tailwind preflight zeroes those
+   out and recolors the track. */
 main input[type="range"] {
   font: revert;
   margin: revert;
+  color: revert;
+  background-color: revert;
+  border-color: revert;
+}
+
+/* v1's stylesheet sets `button { background: var(--surface); ... }`
+   explicitly (white on the panel) while the text color is left as the
+   Chrome UA default (black).  Tailwind preflight strips both, leaving
+   buttons with the serif body color on a transparent background.
+   `color: revert` returns to the UA black; bg is set explicitly to
+   match v1's `var(--surface)` (= --color-surface in v2). */
+main button {
+  color: revert;
+  background-color: var(--color-surface);
 }
 
 /* v1-faithful step-row styling (mirrors docs/legacy/index.html lines 47-50) */
