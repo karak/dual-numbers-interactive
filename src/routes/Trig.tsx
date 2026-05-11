@@ -70,13 +70,13 @@ export function Trig() {
             <span>Taylor 次数: {terms}</span>{' '}
             <button
               onClick={() => setTerms((t) => (t < 8 ? t + 1 : t))}
-              className="border border-[var(--color-border)] rounded px-2 py-1"
+              className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5"
             >
               + 項を追加
             </button>{' '}
             <button
               onClick={() => setTerms(1)}
-              className="border border-[var(--color-border)] rounded px-2 py-1"
+              className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5"
             >
               リセット
             </button>

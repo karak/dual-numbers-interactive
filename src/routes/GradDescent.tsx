@@ -101,22 +101,22 @@ export function GradDescent() {
             step={0.01}
             onChange={(v) => setEta(v)}
           />
-          <div className="flex gap-2 mt-3">
+          <div className="flex flex-wrap gap-2 mt-3">
             <button
               onClick={doStep}
               disabled={diverged}
-              className="border border-[var(--color-border)] rounded px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               1 ステップ
             </button>
             <button
               onClick={doTen}
               disabled={diverged}
-              className="border border-[var(--color-border)] rounded px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               10 ステップ
             </button>
-            <button onClick={reset} className="border border-[var(--color-border)] rounded px-3 py-1">
+            <button onClick={reset} className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5">
               リセット
             </button>
           </div>
