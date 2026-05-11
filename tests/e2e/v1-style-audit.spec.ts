@@ -769,23 +769,61 @@ test.describe('v1 -> v2 style audit', () => {
   // is serif. A common v2 mistake is to slap `[font-family:var(--font-ui)]`
   // on the wrapper div / <label> for a "UI feel", which silently turns the
   // Japanese label text sans-serif. This test bucket-compares both sides.
-  test('main label font-family inherits body serif (slider + select labels)', async ({
+  test('main label font (family + size + line-height) inherits body defaults', async ({
     page,
     browser,
   }) => {
     // grad-descent exposes both slider labels ("初期値 x_0", "学習率 η") and
     // is therefore the easiest single route to audit. We pick the first
     // <label> inside <main> — both v1 and v2 render it as the x_0 slider.
+    //
+    // Three things to check (every Tailwind `text-*` utility sets all three,
+    // so they can drift together):
+    //   1) font-family bucket: serif (inherited from body)
+    //   2) font-size: 16px (browser default — v1 has no override)
+    //   3) line-height: 25.6px (1.6 × 16, inherited from body)
     const { v1: a, v2: b } = await pairSnapshot(
       browser,
       page,
       '#/grad-descent',
       'main label',
       'main label',
-      ['font-family'],
+      ['font-family', 'font-size', 'line-height'],
     );
 
     expect(familyBucket(a['font-family']), `v1 label font="${a['font-family']}"`).toBe('serif');
     expect(familyBucket(b['font-family']), `v2 label font="${b['font-family']}"`).toBe('serif');
+    expectClose(parseFloat(b['font-size']), parseFloat(a['font-size']), 'label font-size');
+    expectClose(parseFloat(b['line-height']), parseFloat(a['line-height']), 'label line-height');
+  });
+
+  test('header h1 line-height matches v1 header text line-height', async ({ page, browser }) => {
+    // v1 has plain text inside <header>; v2 wraps it in <h1>. Tailwind's
+    // `text-base` sets line-height: 1.5rem (24px), but v1's text inherits
+    // body's line-height: 1.6 → 25.6px. That 1.6px gap propagates into a
+    // 1.6px header height shift that compounds with the layout grid.
+    const v1Ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+    const v1Page = await v1Ctx.newPage();
+    await openV1(v1Page, '#/intro');
+    const a = await v1Page
+      .locator('header')
+      .first()
+      .evaluate((el) => ({
+        height: el.getBoundingClientRect().height,
+        lineHeight: getComputedStyle(el).lineHeight,
+      }));
+    await v1Ctx.close();
+    await openV2(page, '#/intro');
+    const b = await page
+      .locator('header')
+      .first()
+      .evaluate((el) => ({
+        height: el.getBoundingClientRect().height,
+        // v2 has the text wrapped in an h1; read the h1's line-height since
+        // that's what actually drives the content box, not the header's.
+        innerLineHeight: getComputedStyle(el.querySelector('h1') ?? el).lineHeight,
+      }));
+    expectClose(b.height, a.height, 'header height');
+    expectClose(parseFloat(b.innerLineHeight), parseFloat(a.lineHeight), 'header inner line-height');
   });
 });

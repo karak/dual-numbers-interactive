@@ -38,7 +38,7 @@ export function Chain() {
       <h2 className="mt-0">連鎖律</h2>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_600px] gap-4 mt-2">
         <div>
-          <div className="mb-3 text-sm">
+          <div className="mb-3">
             <label htmlFor={innerId}>内側 g(x): </label>
             <select
               id={innerId}
