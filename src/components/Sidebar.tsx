@@ -12,12 +12,9 @@ export function Sidebar() {
           key={r.path}
           to={`/${r.path}`}
           className={({ isActive }) =>
-            [
-              'block px-3 py-2 rounded [color:var(--color-ink-soft)] no-underline',
-              isActive ? 'bg-[var(--color-accent-soft)] [color:var(--color-accent)]' : '',
-            ]
-              .filter(Boolean)
-              .join(' ')
+            isActive
+              ? 'block px-3 py-2 rounded no-underline bg-[var(--color-accent-soft)] [color:var(--color-accent)]'
+              : 'block px-3 py-2 rounded no-underline [color:var(--color-ink-soft)]'
           }
         >
           {r.label}
