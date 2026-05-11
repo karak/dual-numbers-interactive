@@ -1,173 +1,41 @@
-@import "tailwindcss";
-
-@theme {
-  --color-bg: #fafaf7;
-  --color-surface: #ffffff;
-  --color-ink: #1a1a1a;
-  --color-ink-soft: #4a4a4a;
-  --color-border: #e8e6e0;
-  --color-accent: #5538e8;
-  --color-accent-soft: #ede9ff;
-  --color-curve: #1a1a1a;
-  --color-tangent: #6b4eff;
-  --color-ghost: #b8b3a8;
-  --color-warn: #b00020;
-  --radius: 4px;
+/* Verbatim port of docs/legacy/index.html:L15-49 (v1 <style> block).
+ * Token names and declarations are byte-identical to v1 after HTML indent
+ * removal. No new rules, no removed rules, no modified declarations.
+ * If any addition is ever needed, it MUST be appended below a clearly
+ * labeled "v2-only additions" boundary — not interleaved with v1 rules.
+ */
+:root {
+  --bg: #fafaf7;  --surface: #ffffff;
+  --ink: #1a1a1a; --ink-soft: #4a4a4a;
+  --border: #e8e6e0;
+  --accent: #5538e8; --accent-soft: #ede9ff;
+  --curve: #1a1a1a; --tangent: #6b4eff; --ghost: #b8b3a8;
+  --radius: 4px; --pad: 24px; --gap: 16px;
   --font-body: 'Noto Serif JP', 'Source Serif Pro', Georgia, serif;
   --font-ui: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
   --font-mono: 'JetBrains Mono', Menlo, monospace;
 }
-
-/* v1-compatible token names exposed at :root for plot.ts, useThemeColors,
-   and any v1-faithful test or future contributor reading the legacy file.
-   Tailwind v4 @theme registers --color-* on :root automatically; these
-   bare-name aliases mirror v1's :root declaration verbatim so
-   `getPropertyValue('--bg')` returns the literal hex (not a var() ref). */
-:root {
-  --bg: #fafaf7;
-  --surface: #ffffff;
-  --ink: #1a1a1a;
-  --ink-soft: #4a4a4a;
-  --border: #e8e6e0;
-  --accent: #5538e8;
-  --accent-soft: #ede9ff;
-  --curve: #1a1a1a;
-  --tangent: #6b4eff;
-  --ghost: #b8b3a8;
-  --warn: #b00020;
-}
-
 * { box-sizing: border-box; }
-
-html, body {
-  margin: 0;
-  padding: 0;
-  background: var(--color-bg);
-  color: var(--color-ink);
-  font-family: var(--font-body);
-  line-height: 1.6;
-}
-
-button:focus-visible,
-a:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
-canvas {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-}
-
-/* Restore v1-equivalent button font metrics.  v1 has no explicit
-   `font-size` or `line-height` rule on buttons, so they pick up the
-   Chrome UA stylesheet defaults: ~13.3333px font and `line-height: normal`
-   (≈1.2 × font-size).  Tailwind preflight forces `font: inherit;` on
-   buttons, which collapses them to the 16px body size and 1.6 body
-   line-height, causing '1 ステップ' to wrap on two lines and inflating
-   button height by ~7px.  Restoring both UA values keeps labels on a
-   single line at v1's compact rhythm. */
-main button {
-  font-size: 13.3333px;
-  line-height: normal;
-}
-
-/* Restore v1-equivalent paragraph spacing. Tailwind preflight zeroes
-   <p> margin; v1 inherited browser default (~16px top/bottom).
-   Do NOT add :first-child/:last-child resets — v1 has no such rules and
-   relies on the full 16px top/bottom margin even when <p> is the first
-   or last child of its parent (e.g. inside a grid panel). */
-main p {
-  margin-top: 1em;
-  margin-bottom: 1em;
-}
-
-/* Restore v1-equivalent heading sizes/weights/margins.
-   v1 uses no explicit rules for h2/h3 inside <main>, so they inherit
-   the browser-default UA stylesheet (Chromium: h2 = 1.5em bold, h3 =
-   1.17em bold, ~0.83em/1em vertical margins).  Tailwind preflight resets
-   all headings to `font-size: inherit; font-weight: inherit; margin: 0`,
-   which made v2 headings render at body-size and look like plain prose.
-   Restoring the UA values here keeps the visual hierarchy faithful to v1. */
-main h2 {
-  font-size: 1.5em;
-  font-weight: 700;
-  margin-top: 0.83em;
-  margin-bottom: 0.83em;
-}
-main h3 {
-  font-size: 1.17em;
-  font-weight: 700;
-  margin-top: 1em;
-  margin-bottom: 1em;
-}
-
-/* v1 has no CSS for <select>; it relies on Chrome UA defaults (font ~13.3px,
-   1px border, black text on white background).  Tailwind v4 preflight
-   forces `font: inherit; border: 0; color: inherit; background-color:
-   transparent` on form elements, which would render the trig/chain selects
-   oversized (16px text, no border) with serif body color on a transparent
-   background.  `revert` returns each property to the UA stylesheet value so
-   we render exactly what v1 does without depending on Chrome's specific
-   magic constants. */
-main select {
-  font: revert;
-  border: revert;
-  padding: revert;
-  color: revert;
-  background-color: revert;
-}
-
-/* Same story for <input type=range> — v1 has only `input[type="range"] {
-   width: 100% }` and otherwise leaves UA defaults (~13.3px font, 2px
-   margin, rgb(16,16,16) text on white).  Tailwind preflight zeroes those
-   out and recolors the track. */
-main input[type="range"] {
-  font: revert;
-  margin: revert;
-  color: revert;
-  background-color: revert;
-  border-color: revert;
-}
-
-/* v1's stylesheet sets `button { background: var(--surface); ... }`
-   explicitly (white on the panel) while the text color is left as the
-   Chrome UA default (black).  Tailwind preflight strips both, leaving
-   buttons with the serif body color on a transparent background.
-   `color: revert` returns to the UA black; bg is set explicitly to
-   match v1's `var(--surface)` (= --color-surface in v2). */
-main button {
-  color: revert;
-  background-color: var(--color-surface);
-}
-
-/* v1-faithful step-row styling (mirrors docs/legacy/index.html lines 47-50) */
+html, body { margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); line-height: 1.6; }
+header.app-header { border-bottom: 1px solid var(--border); padding: 16px 24px; font-family: var(--font-ui); font-weight: 600; }
+.layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1200px; margin: 0 auto; gap: var(--gap); padding: var(--gap); }
+aside.sidebar { font-family: var(--font-ui); font-size: 14px; }
+aside.sidebar a { display: block; padding: 8px 12px; color: var(--ink-soft); text-decoration: none; border-radius: var(--radius); }
+aside.sidebar a.active { background: var(--accent-soft); color: var(--accent); }
+aside.sidebar a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+main.main { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--pad); min-height: 480px; }
+.panel { display: grid; grid-template-columns: 1fr 600px; gap: var(--gap); }
+@media (max-width: 1100px) { .layout, .panel { grid-template-columns: 1fr; } }
+.ghost { color: var(--ghost); }
+canvas { background: var(--surface); border: 1px solid var(--border); }
+input[type="range"] { width: 100%; }
+button { font-family: var(--font-ui); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 12px; cursor: pointer; }
+button:hover { border-color: var(--accent); color: var(--accent); }
+pre.code { font-family: var(--font-mono); background: #f5f3ee; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; font-size: 13px; overflow-x: auto; }
+.test-row { padding: 4px 0; font-family: var(--font-mono); font-size: 13px; }
+.test-row.pass { color: #2a7a2a; }
+.test-row.fail { color: #b00020; font-weight: 600; }
 .step-row { padding: 4px 0; }
-.step-row-highlight {
-  background: var(--color-accent-soft);
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-.step-row-ghost { color: var(--color-ghost); }
-
-/* Tailwind v4 preflight sets `svg { display: block }` so authors get
-   block-level images by default. v1's stylesheet has no such reset, so
-   MathJax's SVG output renders math SVGs as `display: inline` (browser
-   default). With SVGs forced to block, inline math `\(...\)` would each
-   break onto its own line and display math containers would shrink to
-   bare SVG height (losing the line-box height inherited from line-height
-   1.6, ~6px per row).  Restore inline display for math SVG only — page
-   chrome SVGs (if any) keep Tailwind's preferred block default. */
-mjx-container svg { display: inline; }
-
-/* Same preflight rule also flips <canvas> to block AND sets
-   `vertical-align: middle` on it. v1 leaves canvas as the UA-default
-   `display: inline` (a replaced element) with `vertical-align: baseline`.
-   The baseline alignment matters: with baseline = bottom of canvas, the
-   parent line box reserves room for the font descender below (~7.6px at
-   16px / line-height 1.6), so the canvas's wrapper <div> renders 367.6px
-   tall. With `vertical-align: middle` the canvas sits centred on the
-   text mid-line and the descender room collapses, shortening the wrapper
-   to bare 360px and dragging panel height down by 7.6px (visible main
-   drift on newton + grad-descent). Restore both UA defaults. */
-main canvas { display: inline; vertical-align: baseline; }
+.step-row.highlight { background: var(--accent-soft); padding: 4px 8px; border-radius: var(--radius); }
+.warn { color: #b00020; }
