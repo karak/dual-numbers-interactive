@@ -17,6 +17,7 @@ build/
 .next/
 .vite/
 .cache/
+*.tsbuildinfo
 
 # Test / coverage
 coverage/
@@ -24,6 +25,8 @@ coverage/
 test-results/
 playwright-report/
 playwright/.cache/
+.playwright-mcp/
+tests/screenshots/
 
 # Environment / secrets
 .env

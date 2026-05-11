@@ -1,0 +1,41 @@
+/* Verbatim port of docs/legacy/index.html:L15-49 (v1 <style> block).
+ * Token names and declarations are byte-identical to v1 after HTML indent
+ * removal. No new rules, no removed rules, no modified declarations.
+ * If any addition is ever needed, it MUST be appended below a clearly
+ * labeled "v2-only additions" boundary — not interleaved with v1 rules.
+ */
+:root {
+  --bg: #fafaf7;  --surface: #ffffff;
+  --ink: #1a1a1a; --ink-soft: #4a4a4a;
+  --border: #e8e6e0;
+  --accent: #5538e8; --accent-soft: #ede9ff;
+  --curve: #1a1a1a; --tangent: #6b4eff; --ghost: #b8b3a8;
+  --radius: 4px; --pad: 24px; --gap: 16px;
+  --font-body: 'Noto Serif JP', 'Source Serif Pro', Georgia, serif;
+  --font-ui: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); line-height: 1.6; }
+header.app-header { border-bottom: 1px solid var(--border); padding: 16px 24px; font-family: var(--font-ui); font-weight: 600; }
+.layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1200px; margin: 0 auto; gap: var(--gap); padding: var(--gap); }
+aside.sidebar { font-family: var(--font-ui); font-size: 14px; }
+aside.sidebar a { display: block; padding: 8px 12px; color: var(--ink-soft); text-decoration: none; border-radius: var(--radius); }
+aside.sidebar a.active { background: var(--accent-soft); color: var(--accent); }
+aside.sidebar a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+main.main { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--pad); min-height: 480px; }
+.panel { display: grid; grid-template-columns: 1fr 600px; gap: var(--gap); }
+@media (max-width: 1100px) { .layout, .panel { grid-template-columns: 1fr; } }
+.ghost { color: var(--ghost); }
+canvas { background: var(--surface); border: 1px solid var(--border); }
+input[type="range"] { width: 100%; }
+button { font-family: var(--font-ui); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 12px; cursor: pointer; }
+button:hover { border-color: var(--accent); color: var(--accent); }
+pre.code { font-family: var(--font-mono); background: #f5f3ee; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; font-size: 13px; overflow-x: auto; }
+.test-row { padding: 4px 0; font-family: var(--font-mono); font-size: 13px; }
+.test-row.pass { color: #2a7a2a; }
+.test-row.fail { color: #b00020; font-weight: 600; }
+.step-row { padding: 4px 0; }
+.step-row.highlight { background: var(--accent-soft); padding: 4px 8px; border-radius: var(--radius); }
+.warn { color: #b00020; }
