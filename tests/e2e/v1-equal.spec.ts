@@ -167,6 +167,27 @@ function diffSnap(v1: Snap, v2: Snap): string[] {
   return diffs;
 }
 
+// MathJax with `svg: { fontCache: 'global' }` (the config both v1 and v2
+// share) injects a single hidden <svg> as a direct child of <body> that
+// holds the SVG font glyph definitions reused by every typeset math
+// container. The walker excludes the global cache from the byte
+// comparison (its anonymous internals are non-deterministic), but its
+// PRESENCE on both sides is a signal that MathJax's fontCache config is
+// consistent. Without this check (subagent review I3), a future config
+// drift from 'global' to 'local' would not be caught.
+async function hasMathJaxFontCache(page: import('@playwright/test').Page): Promise<boolean> {
+  return await page.evaluate(() => {
+    // MathJax 3 SVG output names the global cache <svg id="MJX-SVG-global-cache">.
+    // Fall back to any hidden body-level <svg> if the id contract changes.
+    return (
+      !!document.getElementById('MJX-SVG-global-cache') ||
+      Array.from(document.body.children).some(
+        (el) => el.tagName === 'svg' || el.tagName === 'SVG',
+      )
+    );
+  });
+}
+
 // Auxiliary check on top of byte equality: each <label for="X"> must
 // resolve to an existing element with id="X". This compensates for the
 // IGNORE_ATTR_VALUES entry on id/for — it preserves the semantic
@@ -204,6 +225,7 @@ for (const route of ROUTES) {
     await v1Page.waitForTimeout(2500); // MathJax CDN typesetting
     const v1Snaps = await walkRoot(v1Page);
     const v1LinkageProblems = await verifyLabelInputLinkage(v1Page, 'v1');
+    const v1HasFontCache = await hasMathJaxFontCache(v1Page);
     await v1Ctx.close();
 
     // ----- v2 -----
@@ -215,6 +237,7 @@ for (const route of ROUTES) {
     await page.waitForTimeout(2500);
     const v2Snaps = await walkRoot(page);
     const v2LinkageProblems = await verifyLabelInputLinkage(page, 'v2');
+    const v2HasFontCache = await hasMathJaxFontCache(page);
 
     const v1ByPath = new Map(v1Snaps.map((s) => [s.path, s]));
     const v2ByPath = new Map(v2Snaps.map((s) => [s.path, s]));
@@ -250,5 +273,9 @@ for (const route of ROUTES) {
       linkageProblems.length,
       `${route}: ${linkageProblems.length} label/input linkage problems (see test log)`,
     ).toBe(0);
+    expect(
+      v1HasFontCache && v2HasFontCache,
+      `${route}: MathJax font-cache presence v1=${v1HasFontCache} v2=${v2HasFontCache} — fontCache config drift?`,
+    ).toBe(true);
   });
 }
