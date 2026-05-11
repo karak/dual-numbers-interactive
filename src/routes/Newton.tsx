@@ -121,7 +121,7 @@ export function Newton({ initialHistory: seed }: NewtonProps = {}) {
               ⚠ f'(x) が 0 に近い：発散の恐れ。初期値を変えてみてください。
             </Warn>
           )}
-          <div className="mt-4 space-y-1">
+          <div className="mt-4">
             {history.map((r, i) => {
               const tail = Number.isFinite(r.dfx)
                 ? `,\\; f'(x) = ${r.dfx.toFixed(6)}`

@@ -9,14 +9,19 @@ import { Newton } from './routes/Newton';
 import { GradDescent } from './routes/GradDescent';
 
 const mathjaxConfig = {
-  loader: { load: ['input/tex', 'output/svg'] },
   tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
   svg: { fontCache: 'global' },
 };
 
+// Match v1 which uses MathJax's SVG bundle (`tex-svg.js`). better-react-mathjax
+// defaults to `tex-mml-chtml.js` (CHTML output), and CHTML adds an inline
+// 108.9% font-size to every mjx-container — see index.css note. Pulling the
+// SVG bundle directly keeps math metrics byte-identical to v1.
+const MATHJAX_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js';
+
 export default function App() {
   return (
-    <MathJaxContext version={3} config={mathjaxConfig} hideUntilTypeset="first">
+    <MathJaxContext version={3} src={MATHJAX_SRC} config={mathjaxConfig} hideUntilTypeset="first">
       <HashRouter>
         <Routes>
           <Route element={<Layout />}>

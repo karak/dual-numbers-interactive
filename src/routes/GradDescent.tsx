@@ -126,7 +126,7 @@ export function GradDescent() {
               ⚠ 発散しました。学習率 η を小さくしてください。
             </Warn>
           )}
-          <div className="mt-4 space-y-1">
+          <div className="mt-4">
             {recent.map((r, i) => {
               const idx = offset + i;
               const tex = `\\text{step } ${idx}:\\; x = ${r.x.toFixed(4)},\\; f(x) = ${r.fx.toFixed(4)}`;

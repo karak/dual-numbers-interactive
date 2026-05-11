@@ -53,7 +53,7 @@ export function Trig() {
               <option value="exp">e^x</option>
             </select>
           </div>
-          <div className="mt-4 space-y-1">
+          <div className="mt-4">
             {steps.map((s, i) => (
               <StepRow key={i} tex={s.latex} highlight={s.highlight} ghost={s.ghost} />
             ))}

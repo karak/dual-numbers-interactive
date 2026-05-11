@@ -111,6 +111,15 @@ main select {
   padding: revert;
 }
 
+/* Same story for <input type=range> — v1 has only `input[type="range"] {
+   width: 100% }` and otherwise leaves UA defaults (~13.3px font, 2px
+   margin). Tailwind preflight zeroes those out, which doesn't change
+   the slider visuals much but trips byte-level audits. */
+main input[type="range"] {
+  font: revert;
+  margin: revert;
+}
+
 /* v1-faithful step-row styling (mirrors docs/legacy/index.html lines 47-50) */
 .step-row { padding: 4px 0; }
 .step-row-highlight {
@@ -119,3 +128,13 @@ main select {
   border-radius: 4px;
 }
 .step-row-ghost { color: var(--color-ghost); }
+
+/* Tailwind v4 preflight sets `svg { display: block }` so authors get
+   block-level images by default. v1's stylesheet has no such reset, so
+   MathJax's SVG output renders math SVGs as `display: inline` (browser
+   default). With SVGs forced to block, inline math `\(...\)` would each
+   break onto its own line and display math containers would shrink to
+   bare SVG height (losing the line-box height inherited from line-height
+   1.6, ~6px per row).  Restore inline display for math SVG only — page
+   chrome SVGs (if any) keep Tailwind's preferred block default. */
+mjx-container svg { display: inline; }
