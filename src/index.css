@@ -70,13 +70,14 @@ main button {
 }
 
 /* Restore v1-equivalent paragraph spacing. Tailwind preflight zeroes
-   <p> margin; v1 inherited browser default (~16px top/bottom). */
+   <p> margin; v1 inherited browser default (~16px top/bottom).
+   Do NOT add :first-child/:last-child resets — v1 has no such rules and
+   relies on the full 16px top/bottom margin even when <p> is the first
+   or last child of its parent (e.g. inside a grid panel). */
 main p {
   margin-top: 1em;
   margin-bottom: 1em;
 }
-main p:first-child { margin-top: 0; }
-main p:last-child { margin-bottom: 0; }
 
 /* Restore v1-equivalent heading sizes/weights/margins.
    v1 uses no explicit rules for h2/h3 inside <main>, so they inherit

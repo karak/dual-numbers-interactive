@@ -797,6 +797,38 @@ test.describe('v1 -> v2 style audit', () => {
     expectClose(parseFloat(b['line-height']), parseFloat(a['line-height']), 'label line-height');
   });
 
+  test('main p:first-child keeps top margin (no preflight first-child reset)', async ({
+    page,
+    browser,
+  }) => {
+    // poly/trig/chain/newton put their description <p> inside a grid panel
+    // <div>, so the <p> is the first child of that inner div. A naive
+    // `main p:first-child { margin-top: 0 }` in v2 CSS would silently strip
+    // the 16px gap below the h2's bottom margin, pulling the description
+    // ~16px higher than v1.  v1 has no such reset; the rule should not
+    // exist in v2 either. We assert against the computed margin-top for
+    // poly's first <p>, since that <p> sits inside an inner div where the
+    // bug would be visible.
+    const v1Ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+    const v1Page = await v1Ctx.newPage();
+    await openV1(v1Page, '#/poly');
+    const a = await v1Page
+      .locator('main p')
+      .first()
+      .evaluate((el) => getComputedStyle(el).marginTop);
+    await v1Ctx.close();
+    await openV2(page, '#/poly');
+    const b = await page
+      .locator('main p')
+      .first()
+      .evaluate((el) => getComputedStyle(el).marginTop);
+    expectClose(parseFloat(b), parseFloat(a), 'poly p:first-child margin-top');
+    // Sanity: v1 should be 16px (1em at default 16px body). If this trips
+    // it means the baseline drifted and the rest of the assertion is
+    // checking against the wrong number.
+    expectClose(parseFloat(a), 16, 'v1 baseline poly p margin-top is 16px');
+  });
+
   test('header h1 line-height matches v1 header text line-height', async ({ page, browser }) => {
     // v1 has plain text inside <header>; v2 wraps it in <h1>. Tailwind's
     // `text-base` sets line-height: 1.5rem (24px), but v1's text inherits
