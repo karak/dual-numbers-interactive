@@ -5,11 +5,14 @@ const ROUTES = ['/intro', '/poly', '/trig', '/chain', '/newton', '/grad-descent'
 async function gotoHash(page: Page, hash: string) {
   await page.goto('/');
   await page.evaluate((h) => { location.hash = h; }, `#${hash}`);
-  // Deterministic wait: every route renders an <h2> inside <main>. Wait until
-  // it has non-empty text instead of sleeping a fixed 500ms (which is both
-  // flaky on slow CI and wasted on fast local runs).
+  // Wait for both the route h2 AND MathJax to typeset (v1-faithful routes
+  // place '$...$' tokens directly in text; the raw-$ smoke assertion below
+  // fires before typeset replaces them with <mjx-container>, so we wait for
+  // at least one mjx-container to appear under <main>).
   await page.waitForFunction(
-    () => (document.querySelector('main h2')?.textContent?.length ?? 0) > 0,
+    () =>
+      (document.querySelector('main h2')?.textContent?.length ?? 0) > 0 &&
+      !!document.querySelector('main mjx-container'),
   );
 }
 
@@ -61,19 +64,12 @@ test('divergence warning shows after many steps with η=1.2', async ({ page }) =
   const etaSlider = page.locator('main input[type=range]').nth(1);
   await etaSlider.fill('1.2');
   const stepBtn = page.getByRole('button', { name: '1 ステップ' });
-  // After divergence the step button becomes disabled (Refactor 4); Playwright
-  // auto-waits for clickable, so naively clicking 45× would hang. Stop as soon
-  // as the button is disabled (or after the empirical 45-iter ceiling).
-  for (let i = 0; i < 45; i++) {
-    if (await stepBtn.isDisabled()) break;
-    await stepBtn.click();
-  }
+  // v1 (docs/legacy/index.html:L724-728) keeps stepping past divergence;
+  // the only effect is the warn text toggle. Click 45× regardless.
+  for (let i = 0; i < 45; i++) await stepBtn.click();
   // v1 verbatim: '⚠ 発散しました。学習率 η を小さくしてください。'
-  const alert = page.getByRole('alert');
-  await expect(alert).toContainText('発散しました。学習率');
-  await expect(alert).toContainText('小さくしてください');
-  // Step buttons disabled after divergence (Refactor 4); reset stays enabled.
-  await expect(stepBtn).toBeDisabled();
-  await expect(page.getByRole('button', { name: '10 ステップ' })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'リセット' })).toBeEnabled();
+  // Warn lives inside <div class="warn"> — v1 has no role=alert.
+  const warn = page.locator('main .warn');
+  await expect(warn).toContainText('発散しました。学習率');
+  await expect(warn).toContainText('小さくしてください');
 });
