@@ -8,15 +8,15 @@ interface StepRowProps {
 
 export function StepRow({ tex, highlight, ghost }: StepRowProps) {
   const cls = [
-    'py-1',
-    highlight ? 'bg-accent-soft px-2 rounded' : '',
-    ghost ? 'text-[var(--color-ghost)]' : '',
+    'step-row',
+    highlight ? 'step-row-highlight' : '',
+    ghost ? 'step-row-ghost' : '',
   ]
     .filter(Boolean)
     .join(' ');
   return (
     <div className={cls}>
-      <MathJax dynamic>{`\\(${tex}\\)`}</MathJax>
+      <MathJax dynamic>{`\\[${tex}\\]`}</MathJax>
     </div>
   );
 }

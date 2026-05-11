@@ -97,3 +97,12 @@ main h3 {
   margin-top: 1em;
   margin-bottom: 1em;
 }
+
+/* v1-faithful step-row styling (mirrors docs/legacy/index.html lines 47-50) */
+.step-row { padding: 4px 0; }
+.step-row-highlight {
+  background: var(--color-accent-soft);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.step-row-ghost { color: var(--color-ghost); }
