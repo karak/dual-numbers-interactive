@@ -13,6 +13,19 @@ describe('newtonStep', () => {
     for (let i = 0; i < 10; i++) x = newtonStep(x).x;
     expect(Math.abs(x ** 3 - 2 * x - 5) < 1e-9).toBe(true);
   });
+
+  // v1 has a dfx-near-zero guard at docs/legacy/index.html:L593:
+  //   const xn = Math.abs(dfx) < 1e-12 ? x : x - fx / dfx;
+  // For f(x) = x^3 - 2x - 5, f'(x) = 3x^2 - 2 = 0 at x = ±sqrt(2/3).
+  // Without the guard, fx / dfx produces ±Infinity and the iteration
+  // poisons every subsequent step.
+  it('does not step when |dfx| < 1e-12 (v1:L593 guard)', () => {
+    const x = Math.sqrt(2 / 3); // f'(x) = 0 here
+    const r = newtonStep(x);
+    expect(Number.isFinite(r.x)).toBe(true);
+    expect(r.x).toBe(x); // v1 leaves x in place
+    expect(r.dfx).toBeCloseTo(0, 10);
+  });
 });
 
 describe('newtonF (f(x) = x^3 - 2x - 5)', () => {

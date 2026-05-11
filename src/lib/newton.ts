@@ -15,12 +15,19 @@ export function newtonF(x: number): number {
 }
 
 // f(x) = x^3 - 2x - 5
+//
+// v1 (docs/legacy/index.html:L593) guards against f'(x) ≈ 0:
+//   const xn = Math.abs(dfx) < 1e-12 ? x : x - fx / dfx;
+// Without the guard, division by ~0 produces ±Infinity (and the next
+// iteration cascades to NaN). The guard keeps x in place so the user can
+// observe the f' ≈ 0 condition (visualised by the warn predicate).
 export function newtonStep(prev: number): NewtonStep {
   const X = Dual.v(prev);
   const r = X.pow(3).sub(Dual.c(2).mul(X)).sub(Dual.c(5));
   const fx = r.re;
   const dfx = r.du;
-  return { prev, fx, dfx, x: prev - fx / dfx };
+  const x = Math.abs(dfx) < 1e-12 ? prev : prev - fx / dfx;
+  return { prev, fx, dfx, x };
 }
 
 // Newton-warning predicate.
