@@ -65,7 +65,7 @@ export function Trig() {
             step={0.01}
             onChange={setX}
           />
-          <div className="mt-3 flex items-center gap-1">
+          <div className="mt-3">
             <label>Taylor 次数: {terms}</label>{' '}
             <button
               onClick={() => setTerms((t) => (t < 8 ? t + 1 : t))}

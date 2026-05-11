@@ -104,13 +104,13 @@ export function Newton({ initialHistory: seed }: NewtonProps = {}) {
               setHistory(initialHistory(v));
             }}
           />
-          <div className="flex flex-wrap gap-1 mt-3">
+          <div className="mt-3">
             <button onClick={doStep} className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5">
               1 ステップ
-            </button>
+            </button>{' '}
             <button onClick={doFive} className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5">
               5 ステップ
-            </button>
+            </button>{' '}
             <button onClick={reset} className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5">
               リセット
             </button>

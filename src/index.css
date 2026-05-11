@@ -138,3 +138,15 @@ main input[type="range"] {
    1.6, ~6px per row).  Restore inline display for math SVG only — page
    chrome SVGs (if any) keep Tailwind's preferred block default. */
 mjx-container svg { display: inline; }
+
+/* Same preflight rule also flips <canvas> to block AND sets
+   `vertical-align: middle` on it. v1 leaves canvas as the UA-default
+   `display: inline` (a replaced element) with `vertical-align: baseline`.
+   The baseline alignment matters: with baseline = bottom of canvas, the
+   parent line box reserves room for the font descender below (~7.6px at
+   16px / line-height 1.6), so the canvas's wrapper <div> renders 367.6px
+   tall. With `vertical-align: middle` the canvas sits centred on the
+   text mid-line and the descender room collapses, shortening the wrapper
+   to bare 360px and dragging panel height down by 7.6px (visible main
+   drift on newton + grad-descent). Restore both UA defaults. */
+main canvas { display: inline; vertical-align: baseline; }
