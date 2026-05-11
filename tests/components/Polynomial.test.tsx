@@ -44,11 +44,11 @@ describe('Polynomial route', () => {
     expect(container.textContent).toContain("f'(2) = 5.0000");
   });
 
-  it('renders the v1 verbatim slider label "\\(x\\)" (jsdom: literal TeX)', () => {
+  it('renders the v1 verbatim slider label "$x$" (jsdom: literal TeX)', () => {
     const { container } = renderPoly();
-    // jsdom does not run MathJax — `<MathJax inline>{`\(x\)`}</MathJax>` appears
-    // in textContent verbatim.
-    expect(container.textContent).toContain('\\(x\\)');
+    // v1 (docs/legacy/index.html:L381) passes label '$x$' to makeSlider, and
+    // jsdom does not run MathJax, so the raw '$x$' text appears in textContent.
+    expect(container.textContent).toContain('$x$');
   });
 
   it('exposes exactly one slider (the x slider)', () => {

@@ -19,16 +19,19 @@ describe('useThemeColors', () => {
     }
   });
 
-  it('respects --color-* values when they are set on documentElement', () => {
-    document.documentElement.style.setProperty('--color-curve', '#123456');
-    document.documentElement.style.setProperty('--color-tangent', '#abcdef');
+  // v1 ground truth: docs/legacy/index.html:L15-25 declares bare-name CSS vars
+  // (--curve, --tangent, ...). useThemeColors reads the same names verbatim
+  // after Step 0 (verbatim CSS port), so the test sets v1's names.
+  it('respects v1 bare-name CSS vars when set on documentElement', () => {
+    document.documentElement.style.setProperty('--curve', '#123456');
+    document.documentElement.style.setProperty('--tangent', '#abcdef');
     try {
       const { result } = renderHook(() => useThemeColors());
       expect(result.current.curve).toBe('#123456');
       expect(result.current.tangent).toBe('#abcdef');
     } finally {
-      document.documentElement.style.removeProperty('--color-curve');
-      document.documentElement.style.removeProperty('--color-tangent');
+      document.documentElement.style.removeProperty('--curve');
+      document.documentElement.style.removeProperty('--tangent');
     }
   });
 });

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { MathJax } from 'better-react-mathjax';
 import { Plot } from '../components/Plot';
 import { Slider } from '../components/Slider';
 import { StepRow } from '../components/StepRow';
@@ -7,17 +6,40 @@ import { Warn } from '../components/Warn';
 import { drawAxes, drawCurve, drawPoint, makePlotMap } from '../lib/plot';
 import { gradF, gradStep, isGradDiverged, type HistRow } from '../lib/grad';
 import { useThemeColors } from '../hooks/useThemeColors';
+import { useMathJaxTypeset } from '../hooks/useMathJaxTypeset';
 
-// v1 source: examples.gradDescent in docs/legacy/index.html
-//   - heading: '勾配降下'
-//   - description: f(x) = (x-2)^2 + 1 の最小点を ...
-//   - slider 初期値 x_0: -5..9 step 0.01 (initial 5.0)
-//   - slider 学習率 η: 0.01..1.2 step 0.01 (initial 0.1)
-//   - buttons '1 ステップ' / '10 ステップ' / 'リセット'
-//   - history starts with {x: x0, fx: f(x0)}
-//   - last 8 rows shown, format '\text{step } i:\; x = ...,\; f(x) = ...'
-//   - warning '⚠ 発散しました。学習率 η を小さくしてください。'
-
+/*
+ * 1:1 port of examples.gradDescent in docs/legacy/index.html:L662-746.
+ *
+ * v1 DOM after render(main, state):
+ *
+ *   <h2>勾配降下</h2>
+ *   <p>$f(x) = (x-2)^2 + 1$ の最小点を $x_{n+1} = x_n - \eta f'(x_n)$ で探します。$f'$ は二重数で自動計算。</p>
+ *   <div class="panel">
+ *     <div>                                          <- left col
+ *       <div style="margin-top:16px">                <- x0 slider container
+ *         <label for="slider-N">初期値 $x_0$ = <span>5.00</span></label>
+ *         <input type="range" min="-5" max="9" step="0.01" value="5">
+ *       </div>
+ *       <div style="margin-top:16px">                <- η slider container
+ *         <label for="slider-M">学習率 $\eta$ = <span>0.10</span></label>
+ *         <input type="range" min="0.01" max="1.2" step="0.01" value="0.1">
+ *       </div>
+ *       <div style="margin-top:12px">                <- button row
+ *         <button>1 ステップ</button> <button>10 ステップ</button> <button>リセット</button>
+ *       </div>
+ *       <div class="warn"></div>                     <- warn (textContent toggled)
+ *       <div>                                        <- stepsEl (last 8 only, offset preserved)
+ *         <div class="step-row">$$\text{step } i:\; ...$$</div> ×≤8
+ *       </div>
+ *     </div>
+ *     <div><canvas></canvas></div>
+ *   </div>
+ *
+ * v1 keeps stepping past divergence; the warn is only a display. We preserve
+ * that behaviour (no `disabled` prop on the buttons) — the previous v2 added
+ * disabled-after-divergence which was not in v1.
+ */
 const initialHistory = (x0: number): HistRow[] => [{ x: x0, fx: gradF(x0) }];
 
 export function GradDescent() {
@@ -46,12 +68,11 @@ export function GradDescent() {
   const reset = () => setHistory(initialHistory(x0));
 
   const diverged = isGradDiverged(history);
-
-  // v1 only displays the last 8 rows (preserving the global step index).
   const recent = history.slice(-8);
   const offset = history.length - recent.length;
 
   const colors = useThemeColors();
+  useMathJaxTypeset([x0, eta, history]);
 
   const draw = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
     const m = makePlotMap({ xMin: -5, xMax: 9, yMin: 0, yMax: 50, w, h });
@@ -73,17 +94,13 @@ export function GradDescent() {
   };
 
   return (
-    <article>
-      <h2 className="mt-0">勾配降下</h2>
-      <p>
-        <MathJax inline>{`\\(f(x) = (x-2)^2 + 1\\)`}</MathJax> の最小点を{' '}
-        <MathJax inline>{`\\(x_{n+1} = x_n - \\eta f'(x_n)\\)`}</MathJax> で探します。
-        <MathJax inline>{`\\(f'\\)`}</MathJax> は二重数で自動計算。
-      </p>
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_600px] gap-4">
+    <>
+      <h2>{'勾配降下'}</h2>
+      <p>{"$f(x) = (x-2)^2 + 1$ の最小点を $x_{n+1} = x_n - \\eta f'(x_n)$ で探します。$f'$ は二重数で自動計算。"}</p>
+      <div className="panel">
         <div>
           <Slider
-            label={<>初期値 <MathJax inline>{`\\(x_0\\)`}</MathJax></>}
+            label="初期値 $x_0$"
             value={x0}
             min={-5}
             max={9}
@@ -94,52 +111,29 @@ export function GradDescent() {
             }}
           />
           <Slider
-            label={<>学習率 <MathJax inline>{`\\(\\eta\\)`}</MathJax></>}
+            label="学習率 $\eta$"
             value={eta}
             min={0.01}
             max={1.2}
             step={0.01}
             onChange={(v) => setEta(v)}
           />
-          <div className="mt-3">
-            <button
-              onClick={doStep}
-              disabled={diverged}
-              className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              1 ステップ
-            </button>{' '}
-            <button
-              onClick={doTen}
-              disabled={diverged}
-              className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              10 ステップ
-            </button>{' '}
-            <button onClick={reset} className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5">
-              リセット
-            </button>
+          <div style={{ marginTop: '12px' }}>
+            <button onClick={doStep}>{'1 ステップ'}</button>{' '}
+            <button onClick={doTen}>{'10 ステップ'}</button>{' '}
+            <button onClick={reset}>{'リセット'}</button>
           </div>
-          {diverged && (
-            <Warn>
-              {/* v1 uses plain-text `η` (no MathJax) inside .warn — match verbatim. */}
-              ⚠ 発散しました。学習率 η を小さくしてください。
-            </Warn>
-          )}
+          <Warn>{diverged ? '⚠ 発散しました。学習率 η を小さくしてください。' : null}</Warn>
           <div>
             {recent.map((r, i) => {
               const idx = offset + i;
               const tex = `\\text{step } ${idx}:\\; x = ${r.x.toFixed(4)},\\; f(x) = ${r.fx.toFixed(4)}`;
-              return (
-                <div key={idx} data-testid="grad-step">
-                  <StepRow tex={tex} />
-                </div>
-              );
+              return <StepRow key={idx} tex={tex} />;
             })}
           </div>
         </div>
-        <Plot draw={draw} ariaLabel="勾配降下の軌跡" />
+        <Plot draw={draw} />
       </div>
-    </article>
+    </>
   );
 }

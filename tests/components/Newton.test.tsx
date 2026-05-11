@@ -31,23 +31,23 @@ describe('Newton route', () => {
 
   it('starts with one history row showing initial x_0 (v1 behaviour)', () => {
     renderNewton();
-    expect(screen.queryAllByTestId('newton-step')).toHaveLength(1);
+    expect(document.querySelectorAll('.step-row')).toHaveLength(1);
   });
 
   it('adds an iteration row when "1 ステップ" clicked', async () => {
     const user = userEvent.setup();
     renderNewton();
-    const before = screen.queryAllByTestId('newton-step').length;
+    const before = document.querySelectorAll('.step-row').length;
     await user.click(screen.getByRole('button', { name: '1 ステップ' }));
-    expect(screen.queryAllByTestId('newton-step').length).toBe(before + 1);
+    expect(document.querySelectorAll('.step-row').length).toBe(before + 1);
   });
 
   it('"5 ステップ" appends 5 rows in one click', async () => {
     const user = userEvent.setup();
     renderNewton();
-    const before = screen.queryAllByTestId('newton-step').length;
+    const before = document.querySelectorAll('.step-row').length;
     await user.click(screen.getByRole('button', { name: '5 ステップ' }));
-    expect(screen.queryAllByTestId('newton-step').length).toBe(before + 5);
+    expect(document.querySelectorAll('.step-row').length).toBe(before + 5);
   });
 
   it('reset button resets to single initial-row state', async () => {
@@ -57,7 +57,7 @@ describe('Newton route', () => {
     await user.click(screen.getByRole('button', { name: '1 ステップ' }));
     await user.click(screen.getByRole('button', { name: 'リセット' }));
     // v1 always keeps the initial-x0 row visible after reset.
-    expect(screen.queryAllByTestId('newton-step')).toHaveLength(1);
+    expect(document.querySelectorAll('.step-row')).toHaveLength(1);
   });
 
   it('shows the v1 description fragment "の根を"', () => {
@@ -91,8 +91,10 @@ describe('Newton route', () => {
         </MemoryRouter>
       </MathJaxContext>,
     );
-    const alert = screen.getByRole('alert');
-    expect(alert).toHaveTextContent("f'(x) が 0 に近い：発散の恐れ。初期値を変えてみてください。");
-    expect(alert).toHaveTextContent('⚠');
+    // v1 (docs/legacy/index.html:L603) uses <div class="warn">, not role=alert.
+    const warn = document.querySelector('.warn')!;
+    expect(warn).not.toBeNull();
+    expect(warn.textContent).toContain("f'(x) が 0 に近い：発散の恐れ。初期値を変えてみてください。");
+    expect(warn.textContent).toContain('⚠');
   });
 });

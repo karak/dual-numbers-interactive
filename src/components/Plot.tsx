@@ -2,28 +2,36 @@ import { useCanvas, type CanvasDrawFn } from '../hooks/useCanvas';
 
 interface PlotProps {
   draw: CanvasDrawFn;
-  width?: number | string;
-  height?: number | string;
-  ariaLabel?: string;
+  width?: number;
+  height?: number;
 }
 
-export function Plot({ draw, width = '100%', height = 360, ariaLabel }: PlotProps) {
+/*
+ * Mirrors v1's canvas wrapping at docs/legacy/index.html:
+ *
+ *   const canvas = h('canvas', {});      // L382 (poly), L460 (trig), etc.
+ *   ...
+ *   h('div', {}, canvas)                 // grid right column
+ *
+ *   setupCanvas(canvas, 600, 360)        // L394-264:
+ *     canvas.width  = w * dpr;
+ *     canvas.height = h * dpr;
+ *     canvas.style.width  = w + 'px';
+ *     canvas.style.height = h + 'px';
+ *
+ * v1's <canvas> has no class / role / aria-label — only width/height
+ * attributes and inline style. The parent <div> has no className either;
+ * positioning is done by .panel { grid-template-columns: 1fr 600px }.
+ *
+ * useCanvas() (hooks/useCanvas.ts) sets width/height attributes DPR-scaled
+ * via JS, identical to v1's setupCanvas. The inline style on <canvas>
+ * supplies the CSS display dimensions.
+ */
+export function Plot({ draw, width = 600, height = 360 }: PlotProps) {
   const ref = useCanvas(draw);
-  // v1 wraps the <canvas> in a <div> grid item. That div is block-level, and
-  // canvas inherits the default inline-replaced display. Inside an inline
-  // line-box the parent picks up the font-descender below the canvas
-  // (~7.6px at 16px / line-height 1.6), so the grid row hosting Plot is
-  // 7.6px taller than the canvas itself.  Mirroring v1's wrapper keeps the
-  // panel grid height byte-identical without fighting Tailwind preflight's
-  // `canvas { display: block }` rule.
   return (
     <div>
-      <canvas
-        ref={ref}
-        role="img"
-        aria-label={ariaLabel ?? 'グラフ'}
-        style={{ width, height }}
-      />
+      <canvas ref={ref} style={{ width, height }} />
     </div>
   );
 }

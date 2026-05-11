@@ -42,14 +42,14 @@ describe('GradDescent route', () => {
     fireEvent.change(etaSlider, { target: { value: '1.2' } });
     const stepBtn = screen.getByRole('button', { name: '1 ステップ' });
     // With eta=1.2, x0=5, |x-2| grows 1.4×/step; reaching |x|>1e6 needs ~38 steps.
-    // Use fireEvent.click (synchronous) so 40 iterations stay fast.
     for (let i = 0; i < 40; i++) fireEvent.click(stepBtn);
-    // v1 verbatim: '⚠ 発散しました。学習率 η を小さくしてください。'
-    const alert = screen.getByRole('alert');
-    expect(alert).toHaveTextContent('発散しました。学習率');
-    expect(alert).toHaveTextContent('小さくしてください');
-    expect(alert).toHaveTextContent('⚠');
-    expect(alert).toHaveTextContent('η');
+    // v1 (docs/legacy/index.html:L603) uses <div class="warn">, not role=alert.
+    const warn = document.querySelector('.warn')!;
+    expect(warn).not.toBeNull();
+    expect(warn.textContent).toContain('発散しました。学習率');
+    expect(warn.textContent).toContain('小さくしてください');
+    expect(warn.textContent).toContain('⚠');
+    expect(warn.textContent).toContain('η');
   });
 
   it('shows the v1 description fragment "の最小点を"', () => {
@@ -68,41 +68,18 @@ describe('GradDescent route', () => {
     expect(screen.getAllByRole('slider')).toHaveLength(2);
   });
 
-  it('disables step buttons after divergence (reset stays enabled)', () => {
-    renderGD();
-    const sliders = screen.getAllByRole('slider') as HTMLInputElement[];
-    const etaSlider = sliders[1];
-    fireEvent.change(etaSlider, { target: { value: '1.2' } });
-    const stepBtn = screen.getByRole('button', { name: '1 ステップ' });
-    for (let i = 0; i < 40; i++) fireEvent.click(stepBtn);
-    // Sanity: divergence warning is up.
-    expect(screen.getByRole('alert')).toHaveTextContent('発散しました');
-    expect(screen.getByRole('button', { name: '1 ステップ' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: '10 ステップ' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'リセット' })).toBeEnabled();
-  });
-
-  it('reset re-enables the step buttons after a previous divergence', () => {
-    renderGD();
-    const sliders = screen.getAllByRole('slider') as HTMLInputElement[];
-    const etaSlider = sliders[1];
-    fireEvent.change(etaSlider, { target: { value: '1.2' } });
-    const stepBtn = screen.getByRole('button', { name: '1 ステップ' });
-    for (let i = 0; i < 40; i++) fireEvent.click(stepBtn);
-    expect(screen.getByRole('button', { name: '1 ステップ' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'リセット' }));
-    expect(screen.getByRole('button', { name: '1 ステップ' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: '10 ステップ' })).toBeEnabled();
-  });
+  // Divergence-disable tests removed: v1 (docs/legacy/index.html:L724-728)
+  // keeps stepping past divergence and only toggles the warn textContent.
+  // The v2-only `disabled` prop was dropped during the v1-faithful rewrite.
 
   it('"10 ステップ" button appends 10 rows; only last 8 are rendered (v1 fidelity)', () => {
     renderGD();
     // Initial state: 1 seed row in history → 1 visible step row.
-    expect(screen.queryAllByTestId('grad-step')).toHaveLength(1);
+    expect(document.querySelectorAll('.step-row')).toHaveLength(1);
     // Click "10 ステップ" once. Default x0=5, eta=0.1: bounded trajectory,
     // no divergence → history grows from 1 to 11. v1 last-8 slice → 8 rows.
     fireEvent.click(screen.getByRole('button', { name: '10 ステップ' }));
-    expect(screen.queryAllByTestId('grad-step')).toHaveLength(8);
+    expect(document.querySelectorAll('.step-row')).toHaveLength(8);
   });
 
   it('shows last 8 rows with global step indices 3..10 after one "10 ステップ" click', () => {

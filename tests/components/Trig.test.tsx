@@ -59,9 +59,10 @@ describe('Trig route', () => {
     expect(container.textContent).toContain('関数:');
   });
 
-  it('renders the v1 verbatim slider label "\\(x\\)" (jsdom: literal TeX)', () => {
+  it('renders the v1 verbatim slider label "$x$" (jsdom: literal TeX)', () => {
     const { container } = renderTrig();
-    expect(container.textContent).toContain('\\(x\\)');
+    // v1 (docs/legacy/index.html:L458) passes label '$x$' to makeSlider.
+    expect(container.textContent).toContain('$x$');
   });
 
   it('exposes exactly one <select> (function select) and one slider (x)', () => {

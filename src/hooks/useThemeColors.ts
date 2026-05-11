@@ -14,10 +14,24 @@ export interface ThemeColors {
   warn: string;
 }
 
-// Fallback palette mirrors the @theme tokens in src/index.css. It exists so
-// that (a) SSR / pre-render contexts have valid hex literals and (b) any test
-// environment that does not load the Tailwind stylesheet (jsdom) still gets
-// drawable colors.
+/*
+ * Mirrors v1's COLORS reader at docs/legacy/index.html:L233-247:
+ *
+ *   const COLORS = (() => {
+ *     const fallback = { curve: '#1a1a1a', tangent: '#6b4eff', border: '#e8e6e0' };
+ *     ...
+ *     return {
+ *       curve:   get('--curve',   fallback.curve),
+ *       tangent: get('--tangent', fallback.tangent),
+ *       ...
+ *     };
+ *   })();
+ *
+ * v1 reads bare-name CSS vars (--curve, --bg, --ink, ...) declared in the
+ * :root block at docs/legacy/index.html:L15-25. After Step 0 (verbatim CSS
+ * port), src/index.css declares the same vars at :root with the same names,
+ * so this hook reads them verbatim — no --color-* prefix.
+ */
 const FALLBACKS: ThemeColors = {
   bg: '#fafaf7',
   surface: '#ffffff',
@@ -43,25 +57,20 @@ function readVars(): ThemeColors {
     return v || fallback;
   };
   return {
-    bg: get('--color-bg', FALLBACKS.bg),
-    surface: get('--color-surface', FALLBACKS.surface),
-    ink: get('--color-ink', FALLBACKS.ink),
-    inkSoft: get('--color-ink-soft', FALLBACKS.inkSoft),
-    border: get('--color-border', FALLBACKS.border),
-    accent: get('--color-accent', FALLBACKS.accent),
-    accentSoft: get('--color-accent-soft', FALLBACKS.accentSoft),
-    curve: get('--color-curve', FALLBACKS.curve),
-    tangent: get('--color-tangent', FALLBACKS.tangent),
-    ghost: get('--color-ghost', FALLBACKS.ghost),
-    warn: get('--color-warn', FALLBACKS.warn),
+    bg: get('--bg', FALLBACKS.bg),
+    surface: get('--surface', FALLBACKS.surface),
+    ink: get('--ink', FALLBACKS.ink),
+    inkSoft: get('--ink-soft', FALLBACKS.inkSoft),
+    border: get('--border', FALLBACKS.border),
+    accent: get('--accent', FALLBACKS.accent),
+    accentSoft: get('--accent-soft', FALLBACKS.accentSoft),
+    curve: get('--curve', FALLBACKS.curve),
+    tangent: get('--tangent', FALLBACKS.tangent),
+    ghost: get('--ghost', FALLBACKS.ghost),
+    warn: get('--warn', FALLBACKS.warn),
   };
 }
 
-// Read the theme palette once per component mount via a lazy useState
-// initializer. The CSS variables in src/index.css are set on
-// `document.documentElement` by Tailwind's @theme block which is loaded
-// synchronously before React mounts, so a single read at mount is enough
-// for an SPA — there is no SSR hydration window to bridge.
 export function useThemeColors(): ThemeColors {
   const [colors] = useState<ThemeColors>(() => readVars());
   return colors;

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { MathJax } from 'better-react-mathjax';
 import { Plot } from '../components/Plot';
 import { Slider } from '../components/Slider';
 import { StepRow } from '../components/StepRow';
@@ -7,21 +6,36 @@ import { Warn } from '../components/Warn';
 import { drawAxes, drawCurve, drawPoint, drawTangent, makePlotMap } from '../lib/plot';
 import { isNewWarningTriggered, newtonF, newtonStep } from '../lib/newton';
 import { useThemeColors } from '../hooks/useThemeColors';
+import { useMathJaxTypeset } from '../hooks/useMathJaxTypeset';
 
-// v1 source: examples.newton in docs/legacy/index.html
-//   - heading: 'Newton 法'
-//   - description: f(x) = x^3 - 2x - 5 ...
-//   - slider: '初期値 x_0' (-3..3 step 0.01)
-//   - buttons: '1 ステップ' / '5 ステップ' / 'リセット'
-//   - history starts with one row {x: x0, fx: f(x0), dfx: NaN}
-//   - history row format: '\text{step } i:\; x = ...,\; f(x) = ...,\; f'(x) = ...'
-//   - warning when last finite |f'(x)| < 1e-6:
-//     '⚠ f'(x) が 0 に近い：発散の恐れ。初期値を変えてみてください。'
-
+/*
+ * 1:1 port of examples.newton in docs/legacy/index.html:L584-661.
+ *
+ * v1 DOM after render(main, state):
+ *
+ *   <h2>Newton 法</h2>
+ *   <p>$f(x) = x^3 - 2x - 5$ の根を $x_{n+1} = ...$ で求めます。$f'$ は二重数で自動計算。</p>
+ *   <div class="panel">
+ *     <div>                                          <- left col
+ *       <div style="margin-top:16px">                <- x0 slider
+ *         <label for="slider-N">初期値 $x_0$ = <span>2.00</span></label>
+ *         <input type="range" min="-3" max="3" step="0.01" value="2">
+ *       </div>
+ *       <div style="margin-top:12px">                <- button row
+ *         <button>1 ステップ</button> <button>5 ステップ</button> <button>リセット</button>
+ *       </div>
+ *       <div class="warn"></div>                     <- warn (textContent toggled)
+ *       <div>                                        <- stepsEl
+ *         <div class="step-row">$$\text{step } i:\; ...$$</div> ×N
+ *       </div>
+ *     </div>
+ *     <div><canvas></canvas></div>
+ *   </div>
+ */
 interface HistoryRow {
   x: number;
   fx: number;
-  dfx: number; // NaN until a step is taken from this row
+  dfx: number;
 }
 
 const initialHistory = (x0: number): HistoryRow[] => [
@@ -29,9 +43,6 @@ const initialHistory = (x0: number): HistoryRow[] => [
 ];
 
 interface NewtonProps {
-  // Optional seed for tests: lets a test inject a history whose final-finite
-  // dfx is near zero to exercise the (otherwise unreachable in -3..3) warning
-  // branch deterministically. Production usage passes nothing.
   initialHistory?: ReadonlyArray<HistoryRow>;
 }
 
@@ -66,10 +77,9 @@ export function Newton({ initialHistory: seed }: NewtonProps = {}) {
   };
   const reset = () => setHistory(initialHistory(x0));
 
-  // Deviation from v1: scan history for the most recent finite dfx instead
-  // of trusting the just-pushed (NaN-dfx) row. See `isNewWarningTriggered`.
   const showWarn = isNewWarningTriggered(history);
   const colors = useThemeColors();
+  useMathJaxTypeset([x0, history]);
 
   const draw = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
     const m = makePlotMap({ xMin: -3, xMax: 3, yMin: -10, yMax: 10, w, h });
@@ -84,17 +94,13 @@ export function Newton({ initialHistory: seed }: NewtonProps = {}) {
   };
 
   return (
-    <article>
-      <h2 className="mt-0">Newton 法</h2>
-      <p>
-        <MathJax inline>{`\\(f(x) = x^3 - 2x - 5\\)`}</MathJax> の根を{' '}
-        <MathJax inline>{`\\(x_{n+1} = x_n - f(x_n)/f'(x_n)\\)`}</MathJax> で求めます。
-        <MathJax inline>{`\\(f'\\)`}</MathJax> は二重数で自動計算。
-      </p>
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_600px] gap-4">
+    <>
+      <h2>{'Newton 法'}</h2>
+      <p>{"$f(x) = x^3 - 2x - 5$ の根を $x_{n+1} = x_n - f(x_n)/f'(x_n)$ で求めます。$f'$ は二重数で自動計算。"}</p>
+      <div className="panel">
         <div>
           <Slider
-            label={<>初期値 <MathJax inline>{`\\(x_0\\)`}</MathJax></>}
+            label="初期値 $x_0$"
             value={x0}
             min={-3}
             max={3}
@@ -104,39 +110,22 @@ export function Newton({ initialHistory: seed }: NewtonProps = {}) {
               setHistory(initialHistory(v));
             }}
           />
-          <div className="mt-3">
-            <button onClick={doStep} className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5">
-              1 ステップ
-            </button>{' '}
-            <button onClick={doFive} className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5">
-              5 ステップ
-            </button>{' '}
-            <button onClick={reset} className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5">
-              リセット
-            </button>
+          <div style={{ marginTop: '12px' }}>
+            <button onClick={doStep}>{'1 ステップ'}</button>{' '}
+            <button onClick={doFive}>{'5 ステップ'}</button>{' '}
+            <button onClick={reset}>{'リセット'}</button>
           </div>
-          {showWarn && (
-            <Warn>
-              {/* v1 uses plain-text `f'(x)` (no MathJax) inside .warn — match verbatim. */}
-              ⚠ f'(x) が 0 に近い：発散の恐れ。初期値を変えてみてください。
-            </Warn>
-          )}
+          <Warn>{showWarn ? "⚠ f'(x) が 0 に近い：発散の恐れ。初期値を変えてみてください。" : null}</Warn>
           <div>
             {history.map((r, i) => {
-              const tail = Number.isFinite(r.dfx)
-                ? `,\\; f'(x) = ${r.dfx.toFixed(6)}`
-                : '';
+              const tail = Number.isFinite(r.dfx) ? `,\\; f'(x) = ${r.dfx.toFixed(6)}` : '';
               const tex = `\\text{step } ${i}:\\; x = ${r.x.toFixed(6)},\\; f(x) = ${r.fx.toFixed(6)}${tail}`;
-              return (
-                <div key={i} data-testid="newton-step">
-                  <StepRow tex={tex} />
-                </div>
-              );
+              return <StepRow key={i} tex={tex} />;
             })}
           </div>
         </div>
-        <Plot draw={draw} ariaLabel="Newton 法の反復" />
+        <Plot draw={draw} />
       </div>
-    </article>
+    </>
   );
 }
