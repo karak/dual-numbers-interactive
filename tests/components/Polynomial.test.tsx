@@ -34,13 +34,14 @@ describe('Polynomial route', () => {
     expect(container.textContent).toContain('を二重数で評価');
   });
 
-  it('updates value/derivative display when slider moves to x=2', () => {
-    renderPoly();
+  it("updates step-row LaTeX when slider moves to x=2 (f(2)=1, f'(2)=5)", () => {
+    const { container } = renderPoly();
     const slider = screen.getByRole('slider') as HTMLInputElement;
     fireEvent.change(slider, { target: { value: '2' } });
-    // f(2) = 1, f'(2) = 5  → fmt3 formats as '1.000' / '5.000'
-    expect(screen.getByTestId('value')).toHaveTextContent('1.000');
-    expect(screen.getByTestId('derivative')).toHaveTextContent('5.000');
+    // v1's "therefore" row: \therefore f(2) = 1.0000, f'(2) = 5.0000
+    // jsdom does not run MathJax — assert against the raw LaTeX in textContent.
+    expect(container.textContent).toContain('f(2) = 1.0000');
+    expect(container.textContent).toContain("f'(2) = 5.0000");
   });
 
   it('renders the v1 verbatim slider label "\\(x\\)" (jsdom: literal TeX)', () => {

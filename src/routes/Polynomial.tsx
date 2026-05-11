@@ -4,7 +4,6 @@ import { Plot } from '../components/Plot';
 import { Slider } from '../components/Slider';
 import { StepRow } from '../components/StepRow';
 import { drawAxes, drawCurve, drawPoint, drawTangent, makePlotMap } from '../lib/plot';
-import { fmt3 } from '../lib/format';
 import { polyCompute, polyF, polySteps } from '../lib/poly';
 import { useThemeColors } from '../hooks/useThemeColors';
 
@@ -51,12 +50,6 @@ export function Polynomial() {
             step={0.01}
             onChange={setX}
           />
-          {/* Numeric value/derivative readout retained for testability and a11y. */}
-          <div className="mt-2 text-sm text-[var(--color-ink-soft)]">
-            <span data-testid="value">{fmt3(value)}</span>
-            {' / '}
-            <span data-testid="derivative">{fmt3(derivative)}</span>
-          </div>
         </div>
         <Plot draw={draw} ariaLabel="f(x) と接線" />
       </div>

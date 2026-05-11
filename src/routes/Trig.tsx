@@ -19,7 +19,7 @@ export function Trig() {
   const [terms, setTerms] = useState(1);
   const [x, setX] = useState(1);
 
-  const { value, derivative } = trigCompute(fn, x);
+  const { value } = trigCompute(fn, x);
   const steps = taylorSteps(fn, x);
   const colors = useThemeColors();
 
@@ -80,12 +80,6 @@ export function Trig() {
             >
               リセット
             </button>
-          </div>
-          {/* readout for tests */}
-          <div className="mt-2 text-sm text-[var(--color-ink-soft)]">
-            <span data-testid="value">{value.toFixed(3)}</span>
-            {' / '}
-            <span data-testid="derivative">{derivative.toFixed(3)}</span>
           </div>
         </div>
         <Plot draw={draw} ariaLabel="関数と Taylor 近似" />
