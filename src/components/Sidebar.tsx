@@ -13,8 +13,8 @@ export function Sidebar() {
           to={`/${r.path}`}
           className={({ isActive }) =>
             [
-              'block px-3 py-2 rounded text-[var(--color-ink-soft)] no-underline',
-              isActive ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent)]' : '',
+              'block px-3 py-2 rounded [color:var(--color-ink-soft)] no-underline',
+              isActive ? 'bg-[var(--color-accent-soft)] [color:var(--color-accent)]' : '',
             ]
               .filter(Boolean)
               .join(' ')
