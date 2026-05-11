@@ -29,7 +29,7 @@ export function Polynomial() {
 
   return (
     <article>
-      <h2 className="font-[var(--font-ui)] mt-0">多項式の自動微分</h2>
+      <h2 className="mt-0">多項式の自動微分</h2>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_600px] gap-4">
         <div>
           <p>

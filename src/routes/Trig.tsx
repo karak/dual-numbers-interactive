@@ -34,10 +34,10 @@ export function Trig() {
 
   return (
     <article>
-      <h2 className="font-[var(--font-ui)] mt-0">sin / cos / exp と Taylor 展開</h2>
+      <h2 className="mt-0">sin / cos / exp と Taylor 展開</h2>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_600px] gap-4 mt-2">
         <div>
-          <div className="mb-3 font-[var(--font-ui)] text-sm">
+          <div className="mb-3 [font-family:var(--font-ui)] text-sm">
             <label htmlFor={selectId}>関数: </label>
             <select
               id={selectId}
@@ -66,7 +66,7 @@ export function Trig() {
             step={0.01}
             onChange={setX}
           />
-          <div className="mt-3 font-[var(--font-ui)] text-sm flex items-center gap-2">
+          <div className="mt-3 [font-family:var(--font-ui)] text-sm flex items-center gap-2">
             <span>Taylor 次数: {terms}</span>{' '}
             <button
               onClick={() => setTerms((t) => (t < 8 ? t + 1 : t))}

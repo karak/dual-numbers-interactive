@@ -74,7 +74,7 @@ export function GradDescent() {
 
   return (
     <article>
-      <h2 className="font-[var(--font-ui)] mt-0">勾配降下</h2>
+      <h2 className="mt-0">勾配降下</h2>
       <p>
         <MathJax inline>{`\\(f(x) = (x-2)^2 + 1\\)`}</MathJax> の最小点を{' '}
         <MathJax inline>{`\\(x_{n+1} = x_n - \\eta f'(x_n)\\)`}</MathJax> で探します。

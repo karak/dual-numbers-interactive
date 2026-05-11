@@ -22,7 +22,7 @@ export function Slider({
   const id = useId();
   return (
     <div className="mt-4">
-      <label htmlFor={id} className="font-[var(--font-ui)] text-sm">
+      <label htmlFor={id} className="[font-family:var(--font-ui)] text-sm">
         {label} = <span>{format(value)}</span>
       </label>
       <input

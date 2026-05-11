@@ -4,7 +4,7 @@ import { ROUTES } from '../lib/constants';
 export function Sidebar() {
   return (
     <nav
-      className="font-[var(--font-ui)] text-sm"
+      className="[font-family:var(--font-ui)] text-sm"
       aria-label="例題メニュー"
     >
       {ROUTES.map((r) => (

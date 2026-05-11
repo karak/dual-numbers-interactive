@@ -85,7 +85,7 @@ export function Newton({ initialHistory: seed }: NewtonProps = {}) {
 
   return (
     <article>
-      <h2 className="font-[var(--font-ui)] mt-0">Newton 法</h2>
+      <h2 className="mt-0">Newton 法</h2>
       <p>
         <MathJax inline>{`\\(f(x) = x^3 - 2x - 5\\)`}</MathJax> の根を{' '}
         <MathJax inline>{`\\(x_{n+1} = x_n - f(x_n)/f'(x_n)\\)`}</MathJax> で求めます。

@@ -35,10 +35,10 @@ export function Chain() {
 
   return (
     <article>
-      <h2 className="font-[var(--font-ui)] mt-0">連鎖律</h2>
+      <h2 className="mt-0">連鎖律</h2>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_600px] gap-4 mt-2">
         <div>
-          <div className="mb-3 font-[var(--font-ui)] text-sm">
+          <div className="mb-3 [font-family:var(--font-ui)] text-sm">
             <label htmlFor={innerId}>
               内側 <MathJax inline>{`\\(g(x)\\)`}</MathJax>:{' '}
             </label>

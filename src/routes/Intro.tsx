@@ -5,7 +5,7 @@ import { MathJax } from 'better-react-mathjax';
 export function Intro() {
   return (
     <article className="max-w-none">
-      <h2 className="font-[var(--font-ui)] mt-0">二重数とは何か</h2>
+      <h2 className="mt-0">二重数とは何か</h2>
       <p>
         二重数は実数の組{' '}
         <strong>
@@ -19,7 +19,7 @@ export function Intro() {
         <MathJax inline>{`\\(i^2 = -1\\)`}</MathJax> と並列で考えてみましょう。
       </p>
 
-      <h3 className="font-[var(--font-ui)]">なぜ自動微分になるのか</h3>
+      <h3>なぜ自動微分になるのか</h3>
       <p>
         関数 <MathJax inline>{`\\(f\\)`}</MathJax> を{' '}
         <MathJax inline>{`\\(x + \\varepsilon\\)`}</MathJax> で評価し Taylor 展開すると：
@@ -39,7 +39,7 @@ export function Intro() {
         のです。
       </p>
 
-      <h3 className="font-[var(--font-ui)]">数式とコードの対応（一例）</h3>
+      <h3>数式とコードの対応（一例）</h3>
       <p>
         乗算規則{' '}
         <MathJax inline>{`\\((a + b\\varepsilon)(c + d\\varepsilon) = ac + (ad + bc)\\varepsilon\\)`}</MathJax>{' '}
