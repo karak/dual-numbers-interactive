@@ -33,15 +33,14 @@ export interface HistRow {
   fx: number;
 }
 
-// Pure predicate: a divergence happened iff the most recent history row has
-// a non-finite fx, a non-finite x, or |x| past DIVERGE_LIMIT. Empty history
-// is, by convention, not diverged (the route always seeds with one row).
+// 1:1 port of v1's warn predicate at docs/legacy/index.html:L721:
+//   !Number.isFinite(last.fx) || Math.abs(last.x) > 1e6
+// Empty history is guarded against to avoid a runtime crash; v1 never
+// reaches the predicate with an empty history because render() always
+// seeds at least one row, but the React route's state initializer
+// matches that invariant and the guard documents it explicitly.
 export function isGradDiverged(h: ReadonlyArray<HistRow>): boolean {
   if (h.length === 0) return false;
   const last = h[h.length - 1];
-  return (
-    !Number.isFinite(last.fx) ||
-    !Number.isFinite(last.x) ||
-    Math.abs(last.x) > DIVERGE_LIMIT
-  );
+  return !Number.isFinite(last.fx) || Math.abs(last.x) > DIVERGE_LIMIT;
 }

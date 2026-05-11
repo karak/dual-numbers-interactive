@@ -25,6 +25,28 @@ describe('gradStep (f(x) = (x-2)^2 + 1)', () => {
   });
 });
 
+// Subagent review I2 (.claude/plans/rustling-swinging-crescent.md): v1
+// (docs/legacy/index.html:L721) divergence predicate is exactly:
+//   !Number.isFinite(last.fx) || Math.abs(last.x) > 1e6
+// v2 had an extra `!Number.isFinite(last.x)` middle clause. The clause is
+// mathematically redundant because (x-2)^2 + 1 maps non-finite x to
+// non-finite fx, and even fabricated `{x: Infinity, fx: 0}` is caught by
+// the `|x| > 1e6` clause (Math.abs(Infinity) > 1e6 is true).
+//
+// Pin via source-text assertion: changing the predicate would change the
+// function body, and a future re-introduction would fail this test.
+describe('isGradDiverged predicate body (I2)', () => {
+  it('does not contain the redundant !Number.isFinite(last.x) clause', async () => {
+    const fs = await import('node:fs');
+    const src = fs.readFileSync('src/lib/grad.ts', 'utf8');
+    // The predicate spans across return-statement lines; we look at the
+    // function body specifically.
+    const fn = src.match(/export function isGradDiverged[\s\S]*?\n\}\n/);
+    expect(fn?.[0]).toBeDefined();
+    expect(fn?.[0]).not.toContain('!Number.isFinite(last.x)');
+  });
+});
+
 describe('isGradDiverged', () => {
   it('empty history is not diverged', () => {
     expect(isGradDiverged([])).toBe(false);
