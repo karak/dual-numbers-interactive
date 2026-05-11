@@ -16,8 +16,6 @@ import v1 from '../fixtures/v1-content.json' with { type: 'json' };
 // Many assertions are expected to FAIL on the current commit — they are the
 // baseline measurement before the fidelity-fix phase.
 
-const BASE_HASH = ''; // the v2 app lives at the root path
-
 async function gotoHash(page: Page, hash: string) {
   // hash arrives as `#/intro` etc. from the v1 fixture; v2 mounts at `/#/intro`.
   await page.goto('/');
