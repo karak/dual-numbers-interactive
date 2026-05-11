@@ -11,7 +11,9 @@
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "extract:v1": "node scripts/extract-v1-content.mjs",
+    "check-v1-fidelity": "node scripts/extract-v1-content.mjs && playwright test tests/e2e/v1-fidelity-strict.spec.ts tests/e2e/v1-style-audit.spec.ts"
   },
   "dependencies": {
     "better-react-mathjax": "^2.3.0",
