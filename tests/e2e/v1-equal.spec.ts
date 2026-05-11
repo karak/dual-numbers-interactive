@@ -176,6 +176,27 @@ function diffSnap(v1: Snap, v2: Snap): string[] {
   return diffs;
 }
 
+// Deterministic readiness signal that supersedes a flat waitForTimeout:
+// every route renders an <h2> AND emits at least one mjx-container (the
+// route description paragraph has $...$ inline math on intro/poly/trig/
+// chain/newton/grad). Once those two are present + the global font-cache
+// <svg> has been appended to <body>, MathJax has finished its first
+// typeset pass. Subagent review I6 (.claude/plans/rustling-swinging-
+// crescent.md) flagged the prior 2500ms fixed wait as CI-flake-prone on
+// cold MathJax CDN cache.
+async function waitForRouteTypeset(page: import('@playwright/test').Page): Promise<void> {
+  await page.waitForFunction(
+    () =>
+      (document.querySelector('main h2')?.textContent?.length ?? 0) > 0 &&
+      !!document.querySelector('main mjx-container') &&
+      (!!document.getElementById('MJX-SVG-global-cache') ||
+        Array.from(document.body.children).some(
+          (el) => el.tagName === 'svg' || el.tagName === 'SVG',
+        )),
+    { timeout: 15000 },
+  );
+}
+
 // MathJax with `svg: { fontCache: 'global' }` (the config both v1 and v2
 // share) injects a single hidden <svg> as a direct child of <body> that
 // holds the SVG font glyph definitions reused by every typeset math
@@ -228,10 +249,7 @@ for (const route of ROUTES) {
     const v1Ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
     const v1Page = await v1Ctx.newPage();
     await v1Page.goto(`${V1_URL}#/${route}`, { waitUntil: 'networkidle' });
-    await v1Page.waitForFunction(
-      () => (document.querySelector('main h2')?.textContent?.length ?? 0) > 0,
-    );
-    await v1Page.waitForTimeout(2500); // MathJax CDN typesetting
+    await waitForRouteTypeset(v1Page);
     const v1Snaps = await walkRoot(v1Page);
     const v1LinkageProblems = await verifyLabelInputLinkage(v1Page, 'v1');
     const v1HasFontCache = await hasMathJaxFontCache(v1Page);
@@ -240,10 +258,7 @@ for (const route of ROUTES) {
     // ----- v2 -----
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto(`/#/${route}`);
-    await page.waitForFunction(
-      () => (document.querySelector('main h2')?.textContent?.length ?? 0) > 0,
-    );
-    await page.waitForTimeout(2500);
+    await waitForRouteTypeset(page);
     const v2Snaps = await walkRoot(page);
     const v2LinkageProblems = await verifyLabelInputLinkage(page, 'v2');
     const v2HasFontCache = await hasMathJaxFontCache(page);
