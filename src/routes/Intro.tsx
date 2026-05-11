@@ -4,7 +4,7 @@ import { MathJax } from 'better-react-mathjax';
 // Headings, paragraphs, formula and code block ported verbatim.
 export function Intro() {
   return (
-    <article className="prose max-w-none">
+    <article className="max-w-none">
       <h2 className="font-[var(--font-ui)] mt-0">二重数とは何か</h2>
       <p>
         二重数は実数の組{' '}
