@@ -101,7 +101,7 @@ export function GradDescent() {
             step={0.01}
             onChange={(v) => setEta(v)}
           />
-          <div className="flex flex-wrap gap-2 mt-3">
+          <div className="flex flex-wrap gap-1 mt-3">
             <button
               onClick={doStep}
               disabled={diverged}
@@ -126,7 +126,7 @@ export function GradDescent() {
               ⚠ 発散しました。学習率 η を小さくしてください。
             </Warn>
           )}
-          <div className="mt-4">
+          <div>
             {recent.map((r, i) => {
               const idx = offset + i;
               const tex = `\\text{step } ${idx}:\\; x = ${r.x.toFixed(4)},\\; f(x) = ${r.fx.toFixed(4)}`;

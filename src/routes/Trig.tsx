@@ -35,7 +35,7 @@ export function Trig() {
   return (
     <article>
       <h2 className="mt-0">sin / cos / exp と Taylor 展開</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_600px] gap-4 mt-2">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_600px] gap-4">
         <div>
           <div className="mb-3">
             <label htmlFor={selectId}>関数: </label>
@@ -46,14 +46,13 @@ export function Trig() {
                 setFn(e.target.value as TrigFn);
                 setTerms(1);
               }}
-              className="ml-2"
             >
               <option value="sin">sin x</option>
               <option value="cos">cos x</option>
               <option value="exp">e^x</option>
             </select>
           </div>
-          <div className="mt-4">
+          <div>
             {steps.map((s, i) => (
               <StepRow key={i} tex={s.latex} highlight={s.highlight} ghost={s.ghost} />
             ))}
@@ -66,8 +65,8 @@ export function Trig() {
             step={0.01}
             onChange={setX}
           />
-          <div className="mt-3 flex items-center gap-2">
-            <span>Taylor 次数: {terms}</span>{' '}
+          <div className="mt-3 flex items-center gap-1">
+            <label>Taylor 次数: {terms}</label>{' '}
             <button
               onClick={() => setTerms((t) => (t < 8 ? t + 1 : t))}
               className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5"

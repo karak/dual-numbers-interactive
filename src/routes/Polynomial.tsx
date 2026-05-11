@@ -37,7 +37,7 @@ export function Polynomial() {
             <MathJax inline>{`\\(\\varepsilon\\)`}</MathJax> 部に{' '}
             <MathJax inline>{`\\(f'(x)\\)`}</MathJax> が同時に出ます。
           </p>
-          <div className="mt-4">
+          <div>
             {steps.map((s, i) => (
               <StepRow key={i} tex={s.latex} highlight={s.highlight} ghost={s.ghost} />
             ))}

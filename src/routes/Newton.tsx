@@ -104,7 +104,7 @@ export function Newton({ initialHistory: seed }: NewtonProps = {}) {
               setHistory(initialHistory(v));
             }}
           />
-          <div className="flex flex-wrap gap-2 mt-3">
+          <div className="flex flex-wrap gap-1 mt-3">
             <button onClick={doStep} className="[font-family:var(--font-ui)] border border-[var(--color-border)] rounded px-3 py-1.5">
               1 ステップ
             </button>
@@ -121,7 +121,7 @@ export function Newton({ initialHistory: seed }: NewtonProps = {}) {
               ⚠ f'(x) が 0 に近い：発散の恐れ。初期値を変えてみてください。
             </Warn>
           )}
-          <div className="mt-4">
+          <div>
             {history.map((r, i) => {
               const tail = Number.isFinite(r.dfx)
                 ? `,\\; f'(x) = ${r.dfx.toFixed(6)}`
